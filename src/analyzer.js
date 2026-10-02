@@ -47,7 +47,7 @@ const KEYWORDS_WITH_WEIGHT = {
   road_hazard: { "road blocked": 2, "blocked road": 2, "road closure": 2, "traffic jam": 1, pileup: 2, collision: 2, pothole: 1, debris: 1, obstruction: 1, "obstruction on": 2 },
   power_hazard: { "power outage": 2, blackout: 2, "downed wire": 2, "live wire": 2, "electrical hazard": 2 },
   environmental: { "building collapse": 3, "structural damage": 3, collapse: 2, "tree down": 2, landslide: 3, "toxic spill": 3, "chemical spill": 3 },
-  security: { "active threat": 3, robbery: 2, "hostile person": 2, assault: 2, "weapon seen": 2 },
+  security: { "active threat": 3, robbery: 2, "hostile person": 2, assault: 2, "weapon seen": 2, weapon: 2, threat: 1, theft: 1, stolen: 1 },
   missing_person: { "missing person": 3, "lost child": 3, "elderly missing": 3, "pet missing": 2, "person reported missing": 3 },
   community_assistance: { "need help": 1, "require assistance": 1, "looking for": 1, "volunteer needed": 1 },
 };
@@ -217,11 +217,11 @@ export function localAnalysis(text) {
 }
 
 export function detectSafetyOverride(urgency, type, observations) {
-  const obs = observations?.join(" ") || "";
-  if (type === "fire_smoke" && /smoke|fire|flames|burning/i.test(obs)) return "immediate";
-  if (type === "medical" && /injured|unconscious|bleeding|hurt|wound/i.test(obs)) return "immediate";
-  if (type === "power_hazard" && /spark|down|exposed/i.test(obs)) return "urgent";
-  if (type === "security" && /weapon|threat|violent/i.test(obs)) return "urgent";
+  const obsStr = observations?.map(o => typeof o === "string" ? o : o.label || "").join(" ") || "";
+  if (type === "fire_smoke" && /smoke|fire|flames|burning/i.test(obsStr)) return "immediate";
+  if (type === "medical" && /injured|unconscious|bleeding|injury|hurt|wound/i.test(obsStr)) return "immediate";
+  if (type === "power_hazard" && /spark|down|exposed/i.test(obsStr)) return "urgent";
+  if (type === "security" && /weapon|threat|violent/i.test(obsStr)) return "urgent";
   return urgency;
 }
 

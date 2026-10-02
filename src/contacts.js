@@ -190,4 +190,4 @@ export function determineSafetyOverride(urgency, type, observations) {
   return urgency;
 }
 
-export { DEFAULT_CONTACTS };
+export { DEFAULT_CONTACTS as getDefaultContacts };
