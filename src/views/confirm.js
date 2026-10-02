@@ -1,6 +1,7 @@
 // LIFELINE AI — Confirmation screen
 import { getState, store } from "../store.js";
 import { getRecommendedContact, buildIncidentPackage } from "../contacts.js";
+import { getRecommendedEmergencyContact } from "../emergency-contacts.js";
 import { esc, showToast } from "../ui.js";
 import { INCIDENT_TYPES } from "../types.js";
 import {
@@ -25,7 +26,11 @@ export function initConfirmScreen(params = {}) {
   if (!incident) return '<div class="card"><p>No incident found.</p></div>';
 
   const typeInfo = INCIDENT_TYPES.find((t) => t.id === incident.type) || { label: "Unknown", icon: "❓", color: "type-other" };
-  const contact = state.contacts.find((c) => c.id === (state.ui.selectedContact || params.contact)) || getRecommendedContact(incident.type);
+  const countryCode = state.settings.countryCode || "US";
+  const emergencyContact = getRecommendedEmergencyContact(incident.type, countryCode);
+  const contact = state.contacts.find((c) => c.id === (state.ui.selectedContact || params.contact))
+    || getRecommendedContact(incident.type)
+    || { id: emergencyContact?.category, name: emergencyContact?.name || "Emergency Services", phone: emergencyContact?.phone, email: "", category: emergencyContact?.category || "general", enabled: true, sms: emergencyContact?.sms || false, call: emergencyContact?.call || true, description: emergencyContact?.description || "Emergency response services" };
   const pkg = buildIncidentPackage(incident);
   const config = state.notificationConfig || { smsProvider: "device-sms", twilioConfigured: false, emailConfigured: false, webhookConfigured: false, configured: false };
   const isDemo = state.demoMode;

@@ -57,6 +57,25 @@ export function initSettingsScreen() {
       </div>
 
       <div class="card">
+        <h3>Emergency contacts</h3>
+        <p class="mu" style="margin-bottom:8px;">
+          Emergency contacts are auto-configured based on your country. Your local emergency numbers are pre-filled.
+        </p>
+        <label>Country / Region
+          <select id="country-code" style="margin-top:6px; width:100%; padding:8px; border-radius:8px; background:var(--bg-primary); border:1px solid var(--border); color:var(--text-primary);">
+            <option value="US" ${state.settings.countryCode === "US" ? "selected" : ""}>United States (911)</option>
+            <option value="CA" ${state.settings.countryCode === "CA" ? "selected" : ""}>Canada (911)</option>
+            <option value="GB" ${state.settings.countryCode === "GB" ? "selected" : ""}>United Kingdom (999)</option>
+            <option value="DE" ${state.settings.countryCode === "DE" ? "selected" : ""}>Germany (112)</option>
+            <option value="FR" ${state.settings.countryCode === "FR" ? "selected" : ""}>France (112)</option>
+            <option value="IN" ${state.settings.countryCode === "IN" ? "selected" : ""}>India (112)</option>
+            <option value="AU" ${state.settings.countryCode === "AU" ? "selected" : ""}>Australia (000)</option>
+          </select>
+        </label>
+        <button type="button" class="btn btn-secondary btn-sm" id="reset-emergency-contacts" style="margin-top:12px;">Reset to country defaults</button>
+      </div>
+
+      <div class="card">
         <h3>Contact directory</h3>
         <p class="mu">${enabledCount} contact${enabledCount !== 1 ? "s" : ""} configured and enabled.</p>
         <button type="button" class="btn btn-secondary btn-sm" data-action="navigate" data-to="contacts">
@@ -119,6 +138,15 @@ export function setupSettingsHandlers() {
   });
   document.getElementById("location-mode")?.addEventListener("change", (e) => {
     store.setSettings({ locationDefault: e.target.value });
+  });
+  document.getElementById("country-code")?.addEventListener("change", (e) => {
+    store.setSettings({ countryCode: e.target.value });
+  });
+  document.getElementById("reset-emergency-contacts")?.addEventListener("click", () => {
+    if (confirm("Reset all emergency contacts to your country's defaults?")) {
+      localStorage.removeItem("lifeline.contacts.v1");
+      location.reload();
+    }
   });
 
   const refreshConfig = async () => {

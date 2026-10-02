@@ -1,7 +1,8 @@
 // LIFELINE AI — Smart escalation screen
 import { getState, store } from "../store.js";
-import { getRecommendedContact, getAvailableChannels } from "../contacts.js";
-import { esc } from "../ui.js";
+import { getRecommendedContact, getAvailableChannels, buildIncidentPackage } from "../contacts.js";
+import { getRecommendedEmergencyContact } from "../emergency-contacts.js";
+import { esc, showToast } from "../ui.js";
 import { INCIDENT_TYPES } from "../types.js";
 
 export function initEscalationScreen(params = {}) {
@@ -10,8 +11,9 @@ export function initEscalationScreen(params = {}) {
   if (!incident) return '<div class="card"><p>No incident found.</p></div>';
 
   const typeInfo = INCIDENT_TYPES.find(t => t.id === incident.type) || { label: "Unknown", icon: "❓" };
-  const contact = getRecommendedContact(incident.type);
-  const channels = contact ? getAvailableChannels(contact).filter(c => c.available) : [];
+  const countryCode = state.settings.countryCode || "US";
+  const emergencyContact = getRecommendedEmergencyContact(incident.type, countryCode);
+  const responseContact = getRecommendedContact(incident.type);
 
   return `
     <div class="escalation-screen">
@@ -33,37 +35,22 @@ export function initEscalationScreen(params = {}) {
         <div class="divider"></div>
 
         <h3>Recommended response contact</h3>
+        <div style="margin-bottom:12px;">
+          <b>${esc(emergencyContact?.name || "No contact available")}</b>
+          <div class="mu">${esc(emergencyContact?.description || "Emergency services for this incident type")}</div>
+          <span class="tag tag-gray">${esc(emergencyContact?.category || "emergency")}</span>
+          ${emergencyContact?.phone ? `<span class="tag tag-gray">Phone: ${esc(emergencyContact.phone)}</span>` : ""}
+        </div>
 
-        ${contact ? `
-          <div style="margin-bottom:12px;">
-            <b>${esc(contact.name)}</b>
-            <div class="mu">${esc(contact.description || "")}</div>
-            <span class="tag tag-gray">${esc(contact.category)}</span>
-            ${contact.coverage ? `<span class="tag tag-gray">Coverage: ${esc(contact.coverage)}</span>` : ""}
-            ${contact.enabled === false ? `<div class="warning-note">This contact is not yet configured. Configure it in Settings → Contact Directory.</div>` : ""}
-          </div>
+        <div class="btn-row">
+          ${emergencyContact?.call ? `<button class="btn btn-primary btn-sm" data-action="call-emergency" data-phone="${esc(emergencyContact.phone?.replace('tel:', '') || '')}">📞 CALL NOW</button>` : ""}
+          ${emergencyContact?.sms ? `<button class="btn btn-secondary btn-sm" data-action="sms-emergency" data-phone="${esc(emergencyContact.phone?.replace('tel:', '') || '')}">💬 SMS</button>` : ""}
+        </div>
 
-          <h4>Available channels</h4>
-          <div class="btn-row">
-            ${channels.length > 0 ? channels.map(ch => `
-              <button class="btn btn-secondary btn-sm" data-contact="${contact.id}" data-channel="${ch.type}">
-                ${ch.icon} ${ch.label}
-              </button>
-            `).join("") : `<p class="mu">No channels available for this contact.</p>`}
-          </div>
-
-          <div class="warning-note" style="margin-top:12px; font-size:12px;">
-            ⚠ For immediate life-threatening emergencies, call your local emergency number (e.g., 911, 112, 999).
-            LIFELINE is not a replacement for emergency services.
-          </div>
-        ` : `
-          <div class="warning-note">
-            No response contact is configured for this incident type.
-            <button class="btn btn-secondary btn-sm" style="margin-top:8px;" data-action="navigate" data-to="settings">
-              Configure contacts
-            </button>
-          </div>
-        `}
+        <div class="warning-note" style="margin-top:12px; font-size:12px;">
+          ⚠ For immediate life-threatening emergencies, call your local emergency number (e.g., 911, 112, 999).
+          LIFELINE is not a replacement for emergency services.
+        </div>
       </div>
 
       <div class="card">
@@ -79,7 +66,7 @@ export function initEscalationScreen(params = {}) {
 
         <div class="btn-row" style="margin-top:16px;">
           <button class="btn btn-secondary" data-action="navigate" data-to="brief">← Edit report</button>
-          <button class="btn btn-primary" data-action="confirm-escalation" data-contact="${contact?.id || ''}">
+          <button class="btn btn-primary" data-action="confirm-escalation" data-contact="${responseContact?.id || emergencyContact?.category || ''}">
             REVIEW & CONFIRM
           </button>
         </div>
@@ -105,11 +92,32 @@ export async function setupEscalationHandlers() {
       }
     });
   }
-  const channelButtons = document.querySelectorAll('[data-channel]');
-  channelButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      const channelType = btn.dataset.channel;
-      alert(`Channel ${channelType} — configure in Settings.`);
+
+  // Emergency call button
+  const callBtn = document.querySelector('[data-action="call-emergency"]');
+  if (callBtn) {
+    callBtn.addEventListener("click", () => {
+      const phone = callBtn.dataset.phone;
+      if (phone) {
+        showToast("Opening phone dialer...");
+        window.location.href = `tel:${phone}`;
+      }
     });
-  });
+  }
+
+  // Emergency SMS button
+  const smsBtn = document.querySelector('[data-action="sms-emergency"]');
+  if (smsBtn) {
+    smsBtn.addEventListener("click", () => {
+      const phone = smsBtn.dataset.phone;
+      const state = getState();
+      const incident = state.ui.selectedIncident || state.incidents[0];
+      if (phone && incident) {
+        const pkg = buildIncidentPackage(incident);
+        const body = encodeURIComponent(pkg.smsMessage || `LIFELINE ${incident.id} — ${incident.urgency?.toUpperCase() || ""}`);
+        showToast("Opening SMS composer...");
+        window.location.href = `sms:${phone}?body=${body}`;
+      }
+    });
+  }
 }
