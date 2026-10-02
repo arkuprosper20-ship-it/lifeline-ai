@@ -93,7 +93,7 @@ export function initDeliveryStatus(params = {}) {
       <div class="card">
         <div class="btn-row">
           <button class="btn btn-secondary" data-action="copy-brief" data-id="${incident.id}">COPY BRIEF</button>
-          <button class="btn btn-primary" data-action="navigate" data-to="brief" data-params='{"incidentId":"${incident.id}">'>
+          <button class="btn btn-primary" data-action="navigate" data-to="brief" data-params='{"incidentId":"${incident.id}}">
             VIEW INCIDENT
           </button>
         </div>

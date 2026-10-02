@@ -71,10 +71,10 @@ export function initIncidentBrief(params = {}) {
           <span class="tag tag-gray">Text-described location</span>
         ` : `
           <p class="mu">No location captured.</p>
-          <button type="button" class="btn btn-secondary btn-sm" data-action="navigate" data-to="location" data-params='{"incidentId":"${incident.id}">'>
+          <button type="button" class="btn btn-secondary btn-sm" data-action="navigate" data-to="location">
             CAPTURE LOCATION
           </button>
-        `}
+         `}
       </div>
 
       <div class="card">
@@ -91,7 +91,7 @@ export function initIncidentBrief(params = {}) {
           <button class="btn btn-primary" data-action="navigate" data-to="escalation" data-params='{"incidentId":"${incident.id}}">
             SMART ESCALATION
           </button>
-          <button class="btn btn-secondary">COPY BRIEF</button>
+          <button type="button" class="btn btn-secondary" data-action="copy-brief" data-id="${incident.id}">COPY BRIEF</button>
         </div>
       </div>
 
