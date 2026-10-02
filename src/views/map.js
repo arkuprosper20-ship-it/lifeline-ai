@@ -3,6 +3,7 @@ import { getState } from "../store.js";
 import { createLocationLink } from "../location.js";
 import { esc, createLeafletMap } from "../ui.js";
 import { INCIDENT_TYPES, INCIDENT_STATUS_LABELS } from "../types.js";
+import { findRelatedIncidents } from "../analyzer.js";
 
 export function initMapScreen() {
   const state = getState();
@@ -50,7 +51,7 @@ export function initMapScreen() {
         </div>
       </div>
 
-      <div class="card">
+       <div class="card">
         <div style="max-height:300px; overflow-y:auto;">
           ${state.incidents.slice(0, 10).map(incident => {
             const typeInfo = INCIDENT_TYPES.find(t => t.id === incident.type) || { label: incident.type, icon: "📋" };
@@ -70,7 +71,31 @@ export function initMapScreen() {
             `;
           }).join('')}
         </div>
-      </div>` : ""}
+      </div>
+
+      ${(() => {
+        const related = findRelatedIncidents(state.incidents);
+        if (related.length === 0) return "";
+        return `
+      <div class="card">
+        <h3>Possibly related incidents</h3>
+        <p class="mu text-small">These reports may describe the same event. Clustering is probabilistic.</p>
+        ${related.slice(0, 3).map(group => {
+          const confidence = Math.round(group.confidence * 100);
+          return `
+          <div style="margin-bottom:12px;">
+            <div class="mu text-small" style="font-size:12px; margin-bottom:4px;">
+              Confidence: ${confidence}%
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              ${group.incidents.map(inc => `<span class="badge badge-verify" style="font-size:11px;">${esc(inc.id)}</span>`).join('')}
+            </div>
+            <div class="text-small text-muted" style="margin-top:4px;">${esc(group.reason)}</div>
+          </div>
+          `;
+        }).join('')}
+      </div>`;
+      })()}` : ""}
     </div>
   `;
 }

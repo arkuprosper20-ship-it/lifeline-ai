@@ -215,3 +215,69 @@ export function localAnalysis(text) {
     summary: `${typeLabel}. ${observations.length > 0 ? observations.map(o => o.label).join(", ") + "." : "No specific observations detected."}`,
   };
 }
+
+export function detectSafetyOverride(urgency, type, observations) {
+  const obs = observations?.join(" ") || "";
+  if (type === "fire_smoke" && /smoke|fire|flames|burning/i.test(obs)) return "immediate";
+  if (type === "medical" && /injured|unconscious|bleeding|hurt|wound/i.test(obs)) return "immediate";
+  if (type === "power_hazard" && /spark|down|exposed/i.test(obs)) return "urgent";
+  if (type === "security" && /weapon|threat|violent/i.test(obs)) return "urgent";
+  return urgency;
+}
+
+export function findRelatedIncidents(incidents, thresholdMinutes = 120, proximityMeters = 500) {
+  const results = [];
+  for (let i = 0; i < incidents.length; i++) {
+    for (let j = i + 1; j < incidents.length; j++) {
+      const a = incidents[i];
+      const b = incidents[j];
+      const timeDiff = Math.abs((b.timestamp || 0) - (a.timestamp || 0)) / 60000;
+      if (timeDiff > thresholdMinutes) continue;
+      let locationMatch = false;
+      let confidence = 0;
+      const commonType = a.type === b.type;
+      const commonObs = (a.observations || []).filter(o => (b.observations || []).some(b => b.toLowerCase().includes(o.toLowerCase())));
+      if (commonType) {
+        locationMatch = true;
+        confidence += 0.4;
+      }
+      if (commonObs.length > 0) {
+        locationMatch = true;
+        confidence += 0.3;
+      }
+      if (a.location?.source === "text" && b.location?.source === "text") {
+        if (a.location?.description && b.location?.description &&
+            a.location.description.toLowerCase().includes(b.location.description.toLowerCase().split(/\s+/)[0])) {
+          locationMatch = true;
+          confidence += 0.3;
+        }
+      }
+      if (a.location?.latitude && b.location?.latitude) {
+        const dist = getDistance(a.location, b.location);
+        if (dist <= proximityMeters) {
+          locationMatch = true;
+          confidence += 0.5 - Math.min(dist / proximityMeters, 0.5);
+        }
+      }
+      if (locationMatch && confidence >= 0.4) {
+        results.push({
+          incidents: [a, b],
+          confidence: Math.min(confidence, 0.95),
+          reason: ["same type", "shared observations", "nearby location", "same area"].filter((_, i) => [commonType, commonObs.length > 0, a.location?.source === "text" && b.location?.source === "text", a.location?.latitude && b.location?.latitude].includes(Boolean) || (i === 3 && a.location?.latitude && b.location?.latitude)).join(", "),
+        });
+      }
+    }
+  }
+  return results.sort((a, b) => b.confidence - a.confidence);
+}
+
+function getDistance(locA, locB) {
+  if (!locA?.latitude || !locB?.latitude) return Infinity;
+  const R = 6371000;
+  const dLat = (locB.latitude - locA.latitude) * Math.PI / 180;
+  const dLon = (locB.longitude - locA.longitude) * Math.PI / 180;
+  const lat1 = locA.latitude * Math.PI / 180;
+  const lat2 = locB.latitude * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
