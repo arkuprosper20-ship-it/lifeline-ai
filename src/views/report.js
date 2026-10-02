@@ -48,7 +48,7 @@ export function initReportScreen() {
         <div class="divider"></div>
 
         <div class="btn-row full-width">
-          <button type="button" class="btn btn-primary" id="analyze-btn" data-action="navigate" data-to="analysis" ${!(state.ui.reportText || "").trim() ? "disabled" : ""}>
+          <button type="button" class="btn btn-primary" id="analyze-btn" data-action="analyze-report" ${!(state.ui.reportText || "").trim() ? "disabled" : ""}>
             ANALYZE REPORT
           </button>
         </div>
