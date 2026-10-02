@@ -135,12 +135,19 @@ function initMobileNav() {
 
 function navigateTo(view, params = {}) {
   if (!routes[view]) view = "report";
-  const search = new URLSearchParams(params);
-  history.replaceState(null, "", "#" + view + (search.toString() ? "?" + search.toString() : ""));
-  getState().ui.currentView = view;
-  getState().ui.params = params;
-  store.save();
-  render();
+  const app = document.getElementById("app");
+  if (app) {
+    app.classList.add("page-exit");
+    app.classList.add("page-exit-active");
+  }
+  setTimeout(() => {
+    const search = new URLSearchParams(params);
+    history.replaceState(null, "", "#" + view + (search.toString() ? "?" + search.toString() : ""));
+    getState().ui.currentView = view;
+    getState().ui.params = params;
+    store.save();
+    render();
+  }, 150);
 }
 
 function render() {
@@ -155,7 +162,8 @@ function render() {
     return;
   }
   const html = component(params);
-  app.innerHTML = "";
+  app.classList.remove("page-exit-active");
+  app.classList.add("page-enter");
   if (typeof html === "string") {
     app.innerHTML = html;
   } else if (typeof html === "function") {
@@ -182,6 +190,10 @@ function render() {
     if (actionBtn) {
       handleAction(actionBtn.dataset.action, actionBtn.dataset);
     }
+  });
+  requestAnimationFrame(() => {
+    app.classList.add("page-enter-active");
+    setTimeout(() => app.classList.remove("page-enter", "page-enter-active"), 300);
   });
 }
 

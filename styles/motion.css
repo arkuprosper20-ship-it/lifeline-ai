@@ -1,0 +1,536 @@
+/* LIFELINE AI — Premium UI Motion System */
+
+/* Motion duration variables */
+:root {
+  --motion-micro: 150ms;
+  --motion-normal: 300ms;
+  --motion-slow: 450ms;
+  --motion-major: 600ms;
+
+  /* Easing functions */
+  --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-in: cubic-bezier(0.42, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.65, 0.05, 0.36, 1);
+  --ease-spring: cubic-bezier(0.28, 0.84, 0.42, 1);
+
+  /* Premium colors */
+  --violet-electric: #8b5cf6;
+  --violet-dim: #7c3aed;
+  --navy-deep: #0a0f1a;
+  --navy-surface: rgba(15, 23, 42, 0.65);
+  --glass-border: rgba(75, 101, 149, 0.3);
+  --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --glass-hover-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Emergency colors */
+  --emergency-red: #ef4444;
+  --emergency-red-glow: rgba(239, 68, 68, 0.4);
+
+  /* Status colors */
+  --status-ready: #22c55e;
+  --status-monitor: #3b82f6;
+  --status-verify: #f59e0b;
+  --status-urgent: #f97316;
+  --status-immediate: #ef4444;
+  --status-error: #ef4444;
+
+  /* Text colors */
+  --text-primary: #ffffff;
+  --text-secondary: #a4b0c8;
+  --text-tertiary: #6b7c9e;
+  --text-muted: #64748b;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  :root {
+    --motion-micro: 0.01ms;
+    --motion-normal: 0.01ms;
+    --motion-slow: 0.01ms;
+    --motion-major: 0.01ms;
+  }
+}
+
+/* Page transition base */
+.page-enter {
+  opacity: 0;
+  transform: translateY(15px);
+  filter: blur(5px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+  transition: opacity var(--motion-slow) var(--ease-out),
+              transform var(--motion-slow) var(--ease-out),
+              filter var(--motion-slow) var(--ease-out);
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  filter: blur(5px);
+  transition: opacity var(--motion-normal) var(--ease-in),
+              transform var(--motion-normal) var(--ease-in),
+              filter var(--motion-normal) var(--ease-in);
+}
+
+/* Glass card base */
+.glass-card {
+  background: var(--navy-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-shadow);
+  transition: box-shadow var(--motion-normal) var(--ease-out),
+              transform var(--motion-micro) var(--ease-out),
+              border-color var(--motion-normal) var(--ease-out);
+}
+
+.glass-card:hover {
+  box-shadow: var(--glass-hover-shadow);
+  transform: translateY(-2px);
+  border-color: var(--glass-border);
+}
+
+/* Status dot for indicators */
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.status-dot.connected {
+  background: var(--status-ready);
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+.status-dot.connecting {
+  background: var(--accent);
+  animation: pulse-medium 1.5s ease-in-out infinite;
+}
+
+.status-dot.disconnected,
+.status-dot.error {
+  background: var(--status-error);
+  animation: none;
+}
+
+.status-dot.warning {
+  background: var(--status-verify);
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes pulse-medium {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* Emergency button base */
+.emergency-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 28px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all var(--motion-micro) var(--ease-out);
+  will-change: transform, box-shadow;
+}
+
+.emergency-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+}
+
+.emergency-btn:active {
+  transform: scale(0.97);
+}
+
+.emergency-btn.neutral {
+  background: var(--navy-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+}
+
+.emergency-btn.neutral:hover {
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+}
+
+.emergency-btn.active {
+  background: var(--emergency-red);
+  color: #fff;
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+.emergency-btn.active::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.3);
+  animation: ping 2s ease-in-out infinite;
+}
+
+@keyframes ping {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--emergency-red-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+  }
+}
+
+/* Modal animations */
+.modal {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--motion-normal) var(--ease-out),
+              visibility var(--motion-normal) var(--ease-out);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity var(--motion-slow) var(--ease-spring),
+              transform var(--motion-slow) var(--ease-spring);
+}
+
+.modal.active .modal-content {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Toast animations */
+.toast-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.toast-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--motion-micro) var(--ease-out),
+              transform var(--motion-micro) var(--ease-out);
+}
+
+.toast-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity var(--motion-micro) var(--ease-in),
+              transform var(--motion-micro) var(--ease-in);
+}
+
+/* Button micro-interactions */
+.btn {
+  transition: background-color var(--motion-micro) var(--ease-out),
+              transform var(--motion-micro) var(--ease-out),
+              box-shadow var(--motion-micro) var(--ease-out);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Input effects */
+.form-input,
+.form-textarea {
+  transition: border-color var(--motion-normal) var(--ease-out),
+              box-shadow var(--motion-normal) var(--ease-out);
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: var(--violet-electric);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+/* Progress indicator */
+.step-indicator {
+  transition: all var(--motion-normal) var(--ease-out);
+}
+
+.step-indicator.complete {
+  background: var(--status-ready);
+  color: var(--navy-deep);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.step-indicator.active {
+  background: var(--violet-electric);
+  color: #fff;
+  animation: step-pulse 1.5s ease-in-out infinite;
+}
+
+.step-indicator.pending {
+  background: var(--border);
+  color: var(--text-tertiary);
+}
+
+@keyframes step-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Map radar effect */
+.map-radar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  pointer-events: none;
+  z-index: 400;
+  animation: radar-sweep 12s linear infinite;
+}
+
+.map-radar::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.04);
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.2);
+}
+
+.map-radar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--violet-electric);
+  animation: radar-rotate 3s linear infinite;
+}
+
+@keyframes radar-sweep {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0.3; }
+}
+
+@keyframes radar-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Map scan line */
+.map-scan {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 399;
+  overflow: hidden;
+}
+
+.map-scan::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.4), transparent);
+  animation: scan-line 8s linear infinite;
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-50px); opacity: 0; }
+  5% { opacity: 0.6; }
+  10% { opacity: 0.4; }
+  100% { transform: translateY(calc(100vh - 50px)); opacity: 0; }
+}
+
+/* Connection indicator strip */
+.connection-indicators {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px;
+}
+
+.connection-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--glass-border);
+  font-size: 12px;
+  transition: border-color var(--motion-normal) var(--ease-out);
+}
+
+.connection-indicator:hover {
+  border-color: var(--violet-electric);
+}
+
+/* Location marker */
+.location-marker {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto;
+}
+
+.location-marker::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.5);
+  animation: marker-pulse 2.5s ease-in-out infinite;
+  z-index: -1;
+}
+
+.location-marker::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.25);
+  animation: marker-expand 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes marker-pulse {
+  0%, 100% { opacity: 0.8; transform: scale(0.8); }
+  50% { opacity: 0.3; transform: scale(1.2); }
+}
+
+@keyframes marker-expand {
+  0% { opacity: 0.5; transform: scale(0.8); }
+  50% { opacity: 0.2; transform: scale(1.6); }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+
+/* Emergency status indicator */
+.emergency-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--glass-border);
+  transition: all var(--motion-normal) var(--ease-out);
+}
+
+.emergency-status.ready { border-color: var(--status-ready); }
+.emergency-status.analyzing { border-color: var(--violet-electric); }
+.emergency-status.alert { border-color: var(--emergency-red); animation: alert-pulse 1.5s ease-in-out infinite; }
+.emergency-status.contacting { border-color: var(--accent); }
+.emergency-status.shared { border-color: var(--status-ready); }
+.emergency-status.responding { border-color: var(--status-monitor); }
+.emergency-status.resolved { border-color: var(--status-resolved); }
+.emergency-status.error { border-color: var(--status-error); }
+
+@keyframes alert-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--emergency-red-glow); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+/* Fade and slide for components */
+.fade-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--motion-normal) var(--ease-out),
+              transform var(--motion-normal) var(--ease-out);
+}
+
+/* Progress bar */
+.progress-bar-container {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background: var(--navy-surface);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--violet-electric), var(--violet-dim));
+  border-radius: 2px;
+  transition: width var(--motion-slow) var(--ease-out);
+  width: 0%;
+}
+
+/* Card hover effect */
+.card {
+  transition: box-shadow var(--motion-normal) var(--ease-out),
+              transform var(--motion-micro) var(--ease-out);
+}
+
+.card:hover {
+  transform: translateY(-1px);
+}
