@@ -3,15 +3,15 @@ import { createLocationLink } from "./location.js";
 import { INCIDENT_TYPES } from "./types.js";
 
 const DEFAULT_CONTACTS = [
-  { id: "fire-response", name: "Fire Response Team", category: "fire_response", phone: "tel:+1-555-0100", email: "", webhook: "", sms: true, call: true, enabled: false, priority: 1, coverage: "All zones", description: "Handles fire, smoke, and flame-related incidents." },
-  { id: "medical-response", name: "Medical Response Team", category: "medical_response", phone: "tel:+1-555-0200", email: "", webhook: "", sms: true, call: true, enabled: false, priority: 2, coverage: "All zones", description: "Handles medical emergencies and injuries." },
-  { id: "flooding-response", name: "Flood Management", category: "flooding_response", phone: "tel:+1-555-0300", email: "", webhook: "", sms: true, call: true, enabled: false, priority: 3, coverage: "Low-lying areas", description: "Handles flooding and water-related incidents." },
-  { id: "road-response", name: "Road Maintenance", category: "road_hazard_response", phone: "tel:+1-555-0400", email: "", webhook: "", sms: true, call: true, enabled: false, priority: 4, coverage: "All streets", description: "Handles road obstructions and hazards." },
-  { id: "power-response", name: "Utility Response", category: "power_response", phone: "tel:+1-555-0500", email: "", webhook: "", sms: true, call: true, enabled: false, priority: 5, coverage: "All zones", description: "Handles power outages and electrical hazards." },
-  { id: "environmental-response", name: "Environmental Safety", category: "environmental_response", phone: "tel:+1-555-0600", email: "", webhook: "", sms: false, call: true, enabled: false, priority: 6, coverage: "All zones", description: "Handles building damage, environmental hazards." },
-  { id: "security-response", name: "Security Team", category: "security_response", phone: "tel:+1-555-0700", email: "", webhook: "", sms: false, call: true, enabled: false, priority: 7, coverage: "All zones", description: "Handles security concerns." },
-  { id: "community-coordinator", name: "Community Coordinator", category: "community_coordinator", phone: "tel:+1-555-0800", email: "", webhook: "", sms: true, call: false, enabled: false, priority: 8, coverage: "All zones", description: "General community coordination and assistance." },
-  { id: "general", name: "General Contact", category: "general", phone: "tel:+1-555-0900", email: "", webhook: "", sms: false, call: true, enabled: false, priority: 99, coverage: "All zones", description: "General inquiries and other reports." },
+  { id: "fire-response", name: "Fire Response Team", category: "fire_response", phone: "tel:+1-555-0100", email: "", webhook: "", sms: true, call: true, enabled: true, priority: 1, coverage: "All zones", description: "Handles fire, smoke, and flame-related incidents." },
+  { id: "medical-response", name: "Medical Response Team", category: "medical_response", phone: "tel:+1-555-0200", email: "", webhook: "", sms: true, call: true, enabled: true, priority: 2, coverage: "All zones", description: "Handles medical emergencies and injuries." },
+  { id: "flooding-response", name: "Flood Management", category: "flooding_response", phone: "tel:+1-555-0300", email: "", webhook: "", sms: true, call: true, enabled: true, priority: 3, coverage: "Low-lying areas", description: "Handles flooding and water-related incidents." },
+  { id: "road-response", name: "Road Maintenance", category: "road_hazard_response", phone: "tel:+1-555-0400", email: "", webhook: "", sms: true, call: true, enabled: true, priority: 4, coverage: "All streets", description: "Handles road obstructions and hazards." },
+  { id: "power-response", name: "Utility Response", category: "power_response", phone: "tel:+1-555-0500", email: "", webhook: "", sms: true, call: true, enabled: true, priority: 5, coverage: "All zones", description: "Handles power outages and electrical hazards." },
+  { id: "environmental-response", name: "Environmental Safety", category: "environmental_response", phone: "tel:+1-555-0600", email: "", webhook: "", sms: false, call: true, enabled: true, priority: 6, coverage: "All zones", description: "Handles building damage, environmental hazards." },
+  { id: "security-response", name: "Security Team", category: "security_response", phone: "tel:+1-555-0700", email: "", webhook: "", sms: false, call: true, enabled: true, priority: 7, coverage: "All zones", description: "Handles security concerns." },
+  { id: "community-coordinator", name: "Community Coordinator", category: "community_coordinator", phone: "tel:+1-555-0800", email: "", webhook: "", sms: true, call: false, enabled: true, priority: 8, coverage: "All zones", description: "General community coordination and assistance." },
+  { id: "general", name: "General Contact", category: "general", phone: "tel:+1-555-0900", email: "", webhook: "", sms: false, call: true, enabled: true, priority: 99, coverage: "All zones", description: "General inquiries and other reports." },
 ];
 
 export function getContacts() {
@@ -37,9 +37,10 @@ export function getContactById(id) {
 
 export function getContactByCategory(category) {
   const contacts = getContacts();
-  const match = contacts.find(c => c.category === category && c.enabled);
+  const enabledContacts = contacts.filter(c => c.enabled);
+  const match = enabledContacts.find(c => c.category === category);
   if (match) return match;
-  const general = contacts.find(c => c.category === "general" && c.enabled);
+  const general = enabledContacts.find(c => c.category === "general");
   if (general) return general;
   return contacts.find(c => c.category === category) || contacts.find(c => c.category === "general") || null;
 }
