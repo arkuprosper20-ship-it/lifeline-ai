@@ -1,0 +1,7 @@
+server {
+  static serve ./dist
+  static indexes index.html
+  routes:
+    /api/*  -> /api/*
+    /*      -> /index.html
+}

@@ -1,0 +1,7 @@
+# LIFELINE AI
+# Sensitive configuration — never commit
+.env
+node_modules/
+dist/
+*.log
+.vercel/

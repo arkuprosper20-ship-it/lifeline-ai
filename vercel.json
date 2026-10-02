@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "build": {
+    "public": "."
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "cleanOutputs": true
+}
