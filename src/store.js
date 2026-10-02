@@ -5,7 +5,7 @@ import { getDefaultContacts as DEFAULT_CONTACTS } from "./contacts.js";
 const state = {
   incidents: [],
   contacts: DEFAULT_CONTACTS,
-  settings: { mode: "automatic", allowGroqFallback: true, locationDefault: "ask", notifications: true, autoSync: true, demoMode: false },
+  settings: { mode: "local", allowGroqFallback: true, locationDefault: "ask", notifications: true, autoSync: true, demoMode: false },
   notificationConfig: null,
   ui: { currentView: "report", selectedIncident: null, reportText: "", imagePreview: null, imageFile: null, voiceText: null, locationText: null, location: null, isAnalyzing: false, analysisResult: null, showLocationModal: false, selectedContact: null, needsRender: false },
   syncQueue: [],

@@ -94,14 +94,17 @@ export async function startAnalysisFlow() {
   try {
     const mode = state.settings.mode;
     const apiKey = state.settings.groqApiKey;
-    const useAI = (mode === "groq" || mode === "automatic") && apiKey && navigator.onLine;
 
     // Always run local analysis first for instant feedback
     const local = localAnalysis(reportText);
     const safetyOverride = detectSafetyOverride(local.urgency, local.type, local.observations);
     const finalUrgency = safetyOverride !== local.urgency ? safetyOverride : local.urgency;
 
-    // Show local result immediately if AI is not needed or not available
+    // Use AI enhancement only when explicitly in groq mode AND configured
+    // Simple inputs like "there is fire" work with local rules instantly
+    const useAI = mode === "groq" && apiKey && navigator.onLine;
+
+    // Show local result immediately if AI is not needed
     if (!useAI) {
       state.ui.analysisResult = { ...local, provider: "rules", model: null };
       finalizeIncident(local, finalUrgency, "rules", null, !!state.ui.imagePreview, false);
