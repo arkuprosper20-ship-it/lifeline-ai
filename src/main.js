@@ -17,6 +17,7 @@ import { initAboutScreen } from "./views/about.js";
 import { initPrivacyScreen } from "./views/privacy.js";
 import { initHelpScreen } from "./views/help.js";
 import { initAuthScreen, setupAuthHandlers } from "./views/auth.js";
+import { initSetupWizard, setupWizardHandlers, checkNeedsSetup } from "./views/setup-wizard.js";
 import { startAnalysisFlow } from "./flows/analyze.js";
 import { setupGlobalListeners } from "./handlers.js";
 import { renderComponent, showToast } from "./ui.js";
@@ -42,6 +43,7 @@ const routes = {
   privacy: initPrivacyScreen,
   help: initHelpScreen,
   auth: initAuthScreen,
+  setup: initSetupWizard,
 };
 
 const mobileNavViews = ["report", "map", "history", "settings"];
@@ -53,6 +55,7 @@ const viewSetups = {
   settings: setupSettingsHandlers,
   contacts: setupContactsHandlers,
   auth: setupAuthHandlers,
+  setup: setupWizardHandlers,
 };
 
 function getHashRoute() {

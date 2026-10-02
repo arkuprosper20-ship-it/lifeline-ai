@@ -90,3 +90,86 @@ export function getRecommendedEmergencyContact(incidentType, countryCode = "US")
   const category = typeToCategory[incidentType] || "general";
   return getEmergencyContact(category, countryCode);
 }
+
+// AI-powered discovery of emergency contacts for countries not in static DB
+export async function discoverEmergencyContacts(countryCode, apiKey, fetchImpl = fetch) {
+  if (!apiKey) return null;
+  try {
+    const response = await fetchImpl("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          {
+            role: "system",
+            content: "You are an emergency services directory assistant. Return ONLY valid JSON with emergency contact numbers for the specified country."
+          },
+          {
+            role: "user",
+            content: `Return JSON with emergency numbers for ${countryCode || "US"}. Format: {"police": {"name": "...", "phone": "...", "sms": true/false, "call": true, "category": "security_response", "description": "..."}, "fire": {...}, "medical": {...}, "general": {...}}`
+          }
+        ],
+        temperature: 0,
+        max_tokens: 300,
+        response_format: { type: "json_object" }
+      }),
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    return JSON.parse(content);
+  } catch (error) {
+    console.warn("[LIFELINE] AI contact discovery failed:", error?.message);
+    return null;
+  }
+}
+
+// Main function to get emergency contacts, with AI fallback for unknown countries
+export async function getEmergencyContactsWithAIFallback(countryCode, apiKey, fetchImpl = fetch) {
+  // Try static database first
+  const staticContacts = getEmergencyContactsForCountry(countryCode);
+  if (staticContacts !== EMERGENCY_CONTACTS_BY_COUNTRY.default) {
+    return staticContacts;
+  }
+  
+  // If we're using defaults, try AI discovery for better local numbers
+  if (apiKey && navigator.onLine) {
+    const aiContacts = await discoverEmergencyContacts(countryCode, apiKey, fetchImpl);
+    if (aiContacts && Object.keys(aiContacts).length >= 3) {
+      // Cache the discovered contacts
+      try {
+        localStorage.setItem(`lifeline.emergency.${countryCode}`, JSON.stringify(aiContacts));
+      } catch {}
+      return normalizeAIContacts(aiContacts);
+    }
+  }
+  
+  return staticContacts;
+}
+
+function normalizeAIContacts(aiContacts) {
+  const normalized = {};
+  const categoryMap = {
+    police: "security_response",
+    fire: "fire_response",
+    medical: "medical_response",
+    ambulance: "medical_response",
+    general: "general"
+  };
+  
+  for (const [key, contact] of Object.entries(aiContacts)) {
+    const category = categoryMap[key.toLowerCase()] || categoryMap[contact.category?.toLowerCase()] || "general";
+    normalized[key] = {
+      name: contact.name || `${key.charAt(0).toUpperCase() + key.slice(1)} Services`,
+      phone: contact.phone || "112",
+      sms: contact.sms !== undefined ? contact.sms : false,
+      call: contact.call !== undefined ? contact.call : true,
+      category: category,
+      description: contact.description || `${category} emergency services`
+    };
+  }
+  return normalized;
+}

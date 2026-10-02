@@ -70,9 +70,13 @@ export function initSettingsScreen() {
             <option value="FR" ${state.settings.countryCode === "FR" ? "selected" : ""}>France (112)</option>
             <option value="IN" ${state.settings.countryCode === "IN" ? "selected" : ""}>India (112)</option>
             <option value="AU" ${state.settings.countryCode === "AU" ? "selected" : ""}>Australia (000)</option>
+            <option value="OTHER" ${!["US","CA","GB","DE","FR","IN","AU"].includes(state.settings.countryCode) ? "selected" : ""}>Other / Not listed</option>
           </select>
         </label>
         <button type="button" class="btn btn-secondary btn-sm" id="reset-emergency-contacts" style="margin-top:12px;">Reset to country defaults</button>
+        <p class="mu text-small" style="margin-top:8px;">
+          <a href="#/setup" data-action="navigate" data-to="setup" style="color:var(--accent);">Run full setup wizard →</a>
+        </p>
       </div>
 
       <div class="card">
