@@ -1,6 +1,6 @@
 // LIFELINE AI — Analysis flow (AI router + rules engine)
 import { getState, store } from "../store.js";
-import { analyzeAssignment, localAnalysis } from "../analyzer.js";
+import { localAnalysis } from "../analyzer.js";
 import { createIncidentId, INCIDENT_STATUS_LABELS } from "../types.js";
 import { showToast } from "../ui.js";
 
