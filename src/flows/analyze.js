@@ -71,7 +71,7 @@ function finalizeIncident(analysis, finalUrgency, provider, model, hasImage, enh
   });
   state.ui.selectedIncident = incident;
 
-  history.replaceState(null, "", "#brief");
+  history.replaceState(null, "", "#escalation");
   setTimeout(() => { location.dispatchEvent(new HashChangeEvent("hashchange")); }, 50);
   showToast(enhanced ? "AI analysis complete. Incident brief generated." : "Analysis complete. Incident brief generated.");
 }
