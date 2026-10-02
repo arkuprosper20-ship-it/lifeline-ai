@@ -24,6 +24,7 @@ import { renderComponent, showToast } from "./ui.js";
 import { buildIncidentPackage } from "./contacts.js";
 import { fetchProviderConfig } from "./notification-providers.js";
 import { readNotifications } from "./sync.js";
+import { logout, getAuthState, AUTH_STATES } from "./auth.js";
 
 const routes = {
   report: initReportScreen,
@@ -73,11 +74,25 @@ function initSidebar() {
   const overlay = document.getElementById("sidebar-overlay");
   const toggle = document.getElementById("sidebar-toggle");
   const closeBtn = document.getElementById("sidebar-close");
+  const userSection = document.getElementById("sidebar-user-section");
+  const userNameEl = document.getElementById("sidebar-user-name");
+
+  function updateAuthState() {
+    const state = getAuthState();
+    const user = getState().currentUser;
+    if (state === AUTH_STATES.AUTHENTICATED && user) {
+      if (userNameEl) userNameEl.textContent = user.name || user.email || "User";
+      if (userSection) userSection.style.display = "block";
+    } else {
+      if (userSection) userSection.style.display = "none";
+    }
+  }
 
   function openSidebar() {
     if (sidebar) sidebar.classList.add("open");
     if (overlay) overlay.classList.add("open");
     if (toggle) toggle.setAttribute("aria-expanded", "true");
+    updateAuthState();
   }
 
   function closeSidebar() {
@@ -110,6 +125,8 @@ function initSidebar() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeSidebar();
   });
+
+  updateAuthState();
 }
 
 function initMobileNav() {
@@ -248,6 +265,11 @@ function handleAction(action, dataset) {
       break;
     case "go-back":
       history.back();
+      break;
+    case "logout":
+      logout();
+      showToast("Logged out successfully.");
+      setTimeout(() => { window.location.href = "#/auth"; location.reload(); }, 500);
       break;
   }
 }
