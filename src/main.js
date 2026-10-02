@@ -19,7 +19,8 @@ import { initHelpScreen } from "./views/help.js";
 import { initAuthScreen, setupAuthHandlers } from "./views/auth.js";
 import { startAnalysisFlow } from "./flows/analyze.js";
 import { setupGlobalListeners } from "./handlers.js";
-import { renderComponent } from "./ui.js";
+import { renderComponent, showToast } from "./ui.js";
+import { buildIncidentPackage, getRecommendedContact } from "./contacts.js";
 
 const routes = {
   report: initReportScreen,
@@ -162,6 +163,15 @@ function handleAction(action, dataset) {
     case "capture-location":
       navigateTo("location");
       break;
+    case "remove-image":
+      store.setUI({ imagePreview: null, imageFile: null });
+      break;
+    case "send-escalation":
+      handleEscalationSend();
+      break;
+    case "retry-sms":
+      handleRetrySMS(dataset.id);
+      break;
     case "verify-incident":
       store.updateIncident(dataset.id, { status: "verified" });
       break;
@@ -236,15 +246,6 @@ function copyBrief(incidentId) {
   });
 }
 
-function showToast(msg) {
-  const div = document.createElement("div");
-  div.className = "toast toast-info";
-  div.textContent = msg;
-  div.style.cssText = "position:fixed;bottom:24px;right:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-size:13px;z-index:300;animation:slideIn .2s ease;";
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 3000);
-}
-
 subscribe(() => {
   const s = getState();
   const currentView = getCurrentView();
@@ -270,5 +271,127 @@ window.addEventListener("hashchange", () => {
 
 window.navigateTo = navigateTo;
 window.getState = getState;
+
+function handleEscalationSend() {
+  const state = getState();
+  const incident = state.ui.selectedIncident || state.incidents[0];
+  if (!incident) return;
+  
+  const contactId = state.ui.selectedContact;
+  const contact = state.contacts.find(c => c.id === contactId) || getRecommendedContact(incident.type);
+  
+  if (!contact) {
+    showToast("No response contact configured for this incident type.");
+    return;
+  }
+  
+  if (!contact.enabled) {
+    showToast("Contact is not enabled. Enable it in Settings first.");
+    return;
+  }
+  
+  const pkg = buildIncidentPackage(incident);
+  
+  let smsResult = { status: "not_attempted", delivered: false };
+  let callResult = { status: "not_attempted", delivered: false };
+  let emailResult = { status: "not_attempted", delivered: false };
+  let webhookResult = { status: "not_attempted", delivered: false };
+  
+  async function sendNotification(type, contact, incidentPkg) {
+    try {
+      const response = await fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, contact, incident: incidentPkg }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || `Request failed (${response.status})`);
+      }
+      return await response.json();
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+  
+  async function processEscalation() {
+    if (contact.sms && contact.phone) {
+      const result = await sendNotification("sms", contact, pkg);
+      smsResult = { status: result.success ? "sent" : "failed", delivered: result.delivered || false, error: result.error, messageId: result.result?.messageId };
+    }
+    
+    if (contact.call && contact.phone) {
+      window.location.href = contact.phone;
+      callResult = { status: "dialer_opened", delivered: true };
+    }
+    
+    if (contact.email && contact.email) {
+      const result = await sendNotification("email", contact, pkg);
+      emailResult = { status: result.success ? "sent" : "failed", delivered: result.delivered || false, error: result.error };
+    }
+    
+    if (contact.webhook && contact.webhook) {
+      const result = await sendNotification("webhook", contact, pkg);
+      webhookResult = { status: result.success ? "sent" : "failed", delivered: result.delivered || false, error: result.error };
+    }
+    
+    store.updateIncident(incident.id, {
+      status: "active",
+      lastEscalation: {
+        at: Date.now(),
+        contact: contact.id,
+        channels: { sms: smsResult, call: callResult, email: emailResult, webhook: webhookResult },
+      },
+    });
+    
+    state.ui.needsRender = true;
+    setTimeout(() => {
+      const url = new URL(window.location);
+      url.hash = "#delivery";
+      url.searchParams.set("incident", incident.id);
+      window.location.href = url.toString();
+    }, 500);
+  }
+  
+  processEscalation();
+}
+
+async function handleRetrySMS(incidentId) {
+  const state = getState();
+  const incident = state.incidents.find(i => i.id === incidentId);
+  if (!incident || !incident.lastEscalation) return;
+  
+  const contactId = incident.lastEscalation.contact;
+  const contact = state.contacts.find(c => c.id === contactId);
+  if (!contact) return;
+  
+  const pkg = buildIncidentPackage(incident);
+  const result = await sendSMSToAPI(contact, pkg);
+  
+  if (result.success) {
+    const update = { ...incident.lastEscalation };
+    update.channels.sms = { status: "sent", delivered: result.delivered || false };
+    store.updateIncident(incidentId, { lastEscalation: update });
+  } else {
+    showToast(`Retry failed: ${result.error}`);
+  }
+}
+
+async function sendSMSToAPI(contact, pkg) {
+  try {
+    const response = await fetch("/api/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "sms", contact, incident: pkg }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return { success: false, error: data.error || `Request failed (${response.status})` };
+    }
+    return await response.json();
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
 
 render();

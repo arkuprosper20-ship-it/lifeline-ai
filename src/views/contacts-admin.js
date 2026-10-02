@@ -1,6 +1,6 @@
 // LIFELINE AI — Contact directory admin view
 import { getState, store } from "../store.js";
-import { saveContacts } from "../contacts.js";
+import { saveContacts, resetToDefaultContacts } from "../contacts.js";
 import { esc, showToast } from "../ui.js";
 
 export function initContactsAdmin() {

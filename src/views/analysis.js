@@ -43,6 +43,9 @@ export function initAnalysisScreen(params = {}) {
         <div style="font-size:48px; margin-bottom:12px;">🤖</div>
         <h3>Ready to analyze</h3>
         <p class="mu">Press analyze to classify this incident and generate an incident brief.</p>
+        <button type="button" class="btn btn-primary" data-action="analyze-report" style="margin-top:12px;">
+          ANALYZE REPORT
+        </button>
       </div>` : ""}
     </div>
   `;

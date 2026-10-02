@@ -1,6 +1,6 @@
 // LIFELINE AI — Confirmation screen
 import { getState, store } from "../store.js";
-import { buildIncidentPackage } from "../contacts.js";
+import { getRecommendedContact, buildIncidentPackage } from "../contacts.js";
 import { createLocationLink } from "../location.js";
 import { esc } from "../ui.js";
 import { INCIDENT_TYPES } from "../types.js";
@@ -103,24 +103,57 @@ export async function setupConfirmHandlers() {
       const incident = state.ui.selectedIncident || state.incidents[0];
       if (!incident) return;
 
-      const contact = state.contacts.find(c => c.id === contactId);
+      const contact = state.contacts.find(c => c.id === contactId) || getRecommendedContact(incident.type);
       if (!contact) {
         showError("No contact configured for this incident type.");
+        return;
+      }
+
+      if (!contact.enabled) {
+        showError("Contact is not enabled. Enable it in Settings first.");
         return;
       }
 
       sendBtn.disabled = true;
       sendBtn.textContent = "Sending...";
 
+      const pkg = buildIncidentPackage(incident);
+
       let smsResult = { status: "not_attempted", delivered: false };
       let callResult = { status: "not_attempted", delivered: false };
+      let emailResult = { status: "not_attempted", delivered: false };
+      let webhookResult = { status: "not_attempted", delivered: false };
+
+      async function sendNotification(channelType) {
+        try {
+          const response = await fetch("/api/notify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: channelType, contact, incident: pkg }),
+          });
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            return { status: "failed", delivered: false, error: data.error || `Request failed (${response.status})` };
+          }
+          const data = await response.json();
+          return { status: "sent", delivered: data.result?.delivered || false, error: null };
+        } catch (error) {
+          return { status: "failed", delivered: false, error: error.message };
+        }
+      }
 
       if (contact.sms && contact.phone) {
-        smsResult = await sendSMS(contact, incident);
+        smsResult = await sendNotification("sms");
       }
       if (contact.call && contact.phone) {
         window.location.href = contact.phone;
         callResult = { status: "dialer_opened", delivered: true };
+      }
+      if (contact.email && contact.email) {
+        emailResult = await sendNotification("email");
+      }
+      if (contact.webhook && contact.webhook) {
+        webhookResult = await sendNotification("webhook");
       }
 
       store.updateIncident(incident.id, {
@@ -128,7 +161,7 @@ export async function setupConfirmHandlers() {
         lastEscalation: {
           at: Date.now(),
           contact: contact.id,
-          channels: { sms: smsResult, call: callResult },
+          channels: { sms: smsResult, call: callResult, email: emailResult, webhook: webhookResult },
         },
       });
 
@@ -137,26 +170,6 @@ export async function setupConfirmHandlers() {
       url.searchParams.set("incident", incident.id);
       window.location.href = url.toString();
     });
-  }
-}
-
-async function sendSMS(contact, incident) {
-  const pkg = buildIncidentPackage(incident);
-  try {
-    const response = await fetch("/api/notify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "sms",
-        contact,
-        incident: pkg,
-      }),
-    });
-    if (!response.ok) throw new Error("Notification service unavailable.");
-    const data = await response.json();
-    return { status: "sent", delivered: data.delivered || false, messageId: data.messageId };
-  } catch (error) {
-    return { status: "failed", delivered: false, error: error.message };
   }
 }
 

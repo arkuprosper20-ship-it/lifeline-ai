@@ -1,16 +1,12 @@
 // LIFELINE AI — State Manager
 import { STORAGE_KEYS, createIncidentId, INCIDENT_TYPES } from "./types.js";
+import { DEFAULT_CONTACTS } from "./contacts.js";
 
 const state = {
   incidents: [],
-  contacts: [
-    { id: "fire-response", name: "Fire Response Team", type: "fire_response", phone: "", email: "", webhook: "", sms: true, email: true, call: true, enabled: false, priority: 1, coverage: "All zones" },
-    { id: "medical-response", name: "Medical Response Team", type: "medical_response", phone: "", email: "", webhook: "", sms: true, email: true, call: true, enabled: false, priority: 2, coverage: "All zones" },
-    { id: "community-coordinator", name: "Community Coordinator", type: "community_coordinator", phone: "", email: "", webhook: "", sms: true, email: true, call: false, enabled: false, priority: 10, coverage: "All zones" },
-    { id: "general", name: "General Contact", type: "general", phone: "", email: "", webhook: "", sms: false, email: false, call: true, enabled: false, priority: 20, coverage: "All zones" },
-  ],
+  contacts: DEFAULT_CONTACTS,
   settings: { mode: "automatic", allowGroqFallback: true, locationDefault: "ask", notifications: true, autoSync: true },
-  ui: { currentView: "report", selectedIncident: null, showLocationModal: false, showConfirmModal: false, locationConsent: false },
+  ui: { currentView: "report", selectedIncident: null, reportText: "", imagePreview: null, imageFile: null, voiceText: null, locationText: null, location: null, isAnalyzing: false, analysisResult: null, showLocationModal: false, selectedContact: null, needsRender: false },
   syncQueue: [],
   isOnline: navigator.onLine,
   currentUser: null,

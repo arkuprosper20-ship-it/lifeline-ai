@@ -98,17 +98,20 @@ export async function setupLocationHandlers() {
   const allowBtn = document.getElementById("allow-location");
   const cancelBtn = document.getElementById("cancel-location");
 
-  captureBtn?.addEventListener("click", async () => {
-    state.ui.showLocationModal = true;
+   captureBtn?.addEventListener("click", async () => {
+    const s = getState();
+    s.ui.showLocationModal = true;
+    store.setUI({ showLocationModal: true });
     const modalEl = document.getElementById("location-modal");
     if (modalEl) modalEl.classList.add("active");
   });
 
   allowBtn?.addEventListener("click", async () => {
     if (modal) modal.classList.remove("active");
+    const s = getState();
     try {
       const location = await getCurrentLocation({ enableHighAccuracy: true, timeout: 15000 });
-      state.ui.location = location;
+      s.ui.location = location;
       store.setUI({ location });
       if (isAccuracyWarning(location.accuracy)) {
         showWarning("Location accuracy is low. Consider selecting a location manually.");
@@ -120,9 +123,13 @@ export async function setupLocationHandlers() {
 
   cancelBtn?.addEventListener("click", () => {
     if (modal) modal.classList.remove("active");
+    const s = getState();
+    s.ui.showLocationModal = false;
+    store.setUI({ showLocationModal: false });
   });
 
   manualBtn?.addEventListener("click", () => {
+    const s = getState();
     const lat = document.getElementById("manual-lat")?.value;
     const lng = document.getElementById("manual-lng")?.value;
     if (!lat || !lng) {
@@ -139,7 +146,7 @@ export async function setupLocationHandlers() {
       showError("Longitude must be between -180 and 180.");
       return;
     }
-    state.ui.location = {
+    const manualLocation = {
       latitude: latNum,
       longitude: lngNum,
       accuracy: null,
@@ -147,17 +154,20 @@ export async function setupLocationHandlers() {
       source: "manual",
       sourceLabel: "MANUALLY ENTERED",
     };
-    store.setUI({ location: state.ui.location });
+    s.ui.location = manualLocation;
+    store.setUI({ location: manualLocation });
   });
 
   saveManualBtn?.addEventListener("click", () => {
+    const s = getState();
     const lat = document.getElementById("manual-lat")?.value;
     const lng = document.getElementById("manual-lng")?.value;
     if (!lat || !lng) return;
     const latNum = Number(lat);
     const lngNum = Number(lng);
-    state.ui.location = { latitude: latNum, longitude: lngNum, accuracy: null, timestamp: Date.now(), source: "manual", sourceLabel: "MANUALLY ENTERED" };
-    store.setUI({ location: state.ui.location });
+    const manualLocation = { latitude: latNum, longitude: lngNum, accuracy: null, timestamp: Date.now(), source: "manual", sourceLabel: "MANUALLY ENTERED" };
+    s.ui.location = manualLocation;
+    store.setUI({ location: manualLocation });
   });
 }
 
@@ -178,6 +188,3 @@ function showWarning(msg) {
   app.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
-
-const { getState } = await import("../store.js");
-const state = getState();
