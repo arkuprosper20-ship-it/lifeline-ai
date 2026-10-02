@@ -792,3 +792,72 @@ The following wireframes document the intended visual and structural design of t
 │  request. It does not guarantee a human response.        │
 └──────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Functionality Matrix
+
+| Feature          | Status          | Works Without API? | API Required? | Tested? |
+| ---------------- | --------------- | ------------------ | ------------- | ------- |
+| Text reporting   | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Voice reporting  | ✅ Implemented    | ✅ Yes (browser)  | ⚠️ Optional   | ✅ Yes  |
+| Image reporting  | ✅ Implemented    | ✅ Yes            | ⚠️ Optional   | ✅ Yes  |
+| AI analysis      | ✅ Implementable  | ✅ Local fallback | ⚠️ GROQ_API_KEY | ✅ Yes |
+| Local fallback   | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Location         | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Map link         | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Smart escalation | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Confirmation     | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Phone            | ✅ tel: link      | ✅ Yes            | ⚠️ Optional   | ✅ Yes  |
+| SMS              | ✅ Via API        | ❌ No             | ✅ API needed | ✅ Yes  |
+| Email            | ✅ Via API        | ❌ No             | ✅ API needed | ✅ Yes  |
+| Webhook          | ✅ Via API        | ❌ No             | ✅ API needed | ✅ Yes  |
+| Incident map     | ✅ Implemented    | ✅ Yes (Leaflet CDN) | ❌ No      | ✅ Yes  |
+| Clustering       | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Offline mode     | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Sync             | ✅ Implemented    | ✅ Yes (queued)   | ⚠️ On reconnect | ✅ Yes |
+| Dashboard        | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Audit log        | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| PWA              | ✅ Implemented    | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Auth             | ✅ Local default  | ✅ Yes            | ⚠️ Firebase optional | ✅ Yes |
+| Incident ID      | ✅ `LF-...` format| ✅ Yes            | ❌ No         | ✅ Yes  |
+| Safety override  | ✅ Deterministic  | ✅ Yes            | ❌ No         | ✅ Yes  |
+| Contact directory| ✅ Admin interface| ✅ Yes            | ❌ No         | ✅ Yes  |
+| Delivery tracking| ✅ Request/Sent/Failed | ✅ Yes         | ⚠️ Optional   | ✅ Yes  |
+
+---
+
+## Demo Flow
+
+1. Open `https://lifeline-ai-red.vercel.app`
+2. Enter this report: **"There is heavy smoke coming from a building near the market and the road is blocked."**
+3. Click **ANALYZE REPORT** — the analysis screen appears with progress steps
+4. The system classifies it as **Fire/Smoke** with **Urgent** urgency (escalated from safety rules)
+5. Observations (smoke, building, road obstruction) appear
+6. Missing info (people count, cause, time) is detected
+7. Review the incident brief — unique ID generated (starts with `LF-`)
+8. Navigate to Location — click "Use current location" (or continue without location)
+9. Smart Escalation shows the Fire Response Team recommended
+10. Click **REVIEW & CONFIRM** — see exactly what will be shared
+11. Click **CONFIRM & SHARE** — communication is sent
+12. Delivery status shows sent/delivered states
+13. Map shows the incident marker
+14. History shows the incident in the chronological list
+15. Audit log records all events
+
+### Testing without API keys
+
+The application works fully without any API keys. In Settings → AI Provider, the mode defaults to "Automatic" which uses the local rules engine when Groq API is unavailable.
+
+---
+
+## Git Readiness
+
+- ✅ No secrets committed (`.env` is in `.gitignore`)
+- ✅ `.env.example` included with all required variables
+- ✅ `vercel.json` configured for SPA routing + API proxy
+- ✅ No StudyLens references in the codebase
+- ✅ `README.md` is complete with full documentation
+- ✅ Build verified (tests pass, deployment working)
+- ✅ `sw.js` service worker caching enabled
+- ✅ `manifest.webmanifest` configured
