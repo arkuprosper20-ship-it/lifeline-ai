@@ -228,9 +228,69 @@ function handleAction(action, dataset) {
     case "copy-brief":
       copyBrief(dataset.id);
       break;
+    case "retry-channel":
+      retryNotification(dataset.id, dataset.channel);
+      break;
     case "go-back":
       history.back();
       break;
+  }
+}
+
+async function retryNotification(incidentId, channel) {
+  const state = getState();
+  const incident = state.incidents.find((i) => i.id === incidentId);
+  if (!incident) return;
+  showToast("Retrying notification...");
+  try {
+    await dispatchRetry(incident, channel);
+    showToast("Notification retried successfully.");
+  } catch (error) {
+    console.error("[LIFELINE] Retry failed:", error);
+    showToast("Retry failed: " + (error.message || "unknown error"));
+  }
+}
+
+async function dispatchRetry(incident, channel) {
+  if (!state.notificationConfig) {
+    state.notificationConfig = await fetchProviderConfig();
+    store.setNotificationConfig(state.notificationConfig);
+  }
+  const config = state.notificationConfig;
+  const provider = selectProvider(config, incident.lastEscalation, false);
+  const pkg = buildIncidentPackage(incident);
+  const contact = state.contacts.find((c) => c.id === incident.lastEscalation?.contact) || getRecommendedContact(incident.type);
+  if (!contact) {
+    showToast("No response contact configured.");
+    return;
+  }
+  const result = await callNotifyApi(channel === "twilio" ? "sms" : channel, contact, pkg);
+  store.updateIncident(incident.id, {
+    lastEscalation: {
+      ...incident.lastEscalation,
+      status: result.success ? "SENT" : "FAILED",
+      delivered: result.success ? true : false,
+      note: result.success ? "Notification retried." : (result.error || "Retry failed"),
+      error: result.success ? null : (result.error || null),
+    },
+  });
+  setTimeout(render, 50);
+}
+
+async function callNotifyApi(type, contact, pkg) {
+  try {
+    const response = await fetch("/api/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, contact, incident: pkg }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return { success: false, error: data.error || `Request failed (${response.status})` };
+    }
+    return await response.json();
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 }
 
