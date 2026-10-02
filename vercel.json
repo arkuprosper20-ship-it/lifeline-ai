@@ -8,6 +8,10 @@
     {
       "src": "/api/notify.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "/api/analyze.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [

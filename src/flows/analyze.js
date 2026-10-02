@@ -93,16 +93,14 @@ export async function startAnalysisFlow() {
 
   try {
     const mode = state.settings.mode;
-    const apiKey = state.settings.groqApiKey;
 
     // Always run local analysis first for instant feedback
     const local = localAnalysis(reportText);
     const safetyOverride = detectSafetyOverride(local.urgency, local.type, local.observations);
     const finalUrgency = safetyOverride !== local.urgency ? safetyOverride : local.urgency;
 
-    // Use AI enhancement only when explicitly in groq mode AND configured
-    // Simple inputs like "there is fire" work with local rules instantly
-    const useAI = mode === "groq" && apiKey && navigator.onLine;
+    // Check if AI is available from server (no user key needed)
+    const useAI = (mode === "groq" || mode === "automatic") && navigator.onLine;
 
     // Show local result immediately if AI is not needed
     if (!useAI) {
@@ -111,18 +109,28 @@ export async function startAnalysisFlow() {
       return;
     }
 
-    // AI mode: show local result first, then enhance
+    // AI mode: show local result first, then enhance via server-side endpoint
     state.ui.analysisResult = { ...local, provider: "rules", model: null, fallbackFrom: "ai" };
     store.setUI({ isAnalyzing: true, analysisResult: state.ui.analysisResult });
     setTimeout(render, 50);
 
     try {
       const { getAIAnalysis } = await import("../analyzer.js");
-      const result = await getAIAnalysis(reportText, state.ui.imagePreview, { apiKey, fetchImpl: fetch, signal: AbortSignal.timeout(15000) });
-      const aiUrgency = result.urgency || local.urgency;
-      const aiOverride = detectSafetyOverride(aiUrgency, result.type, result.observations || []);
-      const finalAIUrgency = aiOverride !== aiUrgency ? aiOverride : aiUrgency;
-      finalizeIncident(result, finalAIUrgency, "groq", result.model || "llama-3.3-70b-versatile", !!state.ui.imagePreview, true);
+      const result = await getAIAnalysis(reportText, state.ui.imagePreview, {
+        fetchImpl: fetch,
+        signal: AbortSignal.timeout(15000),
+        observations: local.observations,
+        incidentType: local.type,
+        urgency: local.urgency
+      });
+      if (result.provider === "groq") {
+        const aiUrgency = result.analysis?.urgency || local.urgency;
+        const aiOverride = detectSafetyOverride(aiUrgency, result.analysis?.type || local.type, result.analysis?.observations || []);
+        const finalAIUrgency = aiOverride !== aiUrgency ? aiOverride : aiUrgency;
+        finalizeIncident(result.analysis, finalAIUrgency, "groq", result.model || "llama-3.3-70b-versatile", !!state.ui.imagePreview, true);
+      } else {
+        finalizeIncident({ ...state.ui.analysisResult, provider: "rules", model: null }, finalUrgency, "rules", null, !!state.ui.imagePreview, false);
+      }
     } catch (error) {
       console.warn("Groq analysis failed, using local result:", error.message);
       finalizeIncident({ ...state.ui.analysisResult, provider: "rules", model: null }, finalUrgency, "rules", null, !!state.ui.imagePreview, false);
