@@ -3,12 +3,7 @@
   "builds": [
     {
       "src": "**/*",
-      "use": "@vercel/static",
-      "config": {
-        "headers": {
-          "cache-control": "no-cache, no-store, must-revalidate"
-        }
-      }
+      "use": "@vercel/static"
     },
     {
       "src": "/api/notify.js",
@@ -17,13 +12,7 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html",
-      "status": 200,
-      "headers": {
-        "cache-control": "no-cache, no-store, must-revalidate"
-      }
-    }
+    { "src": "/(.*\\..+)", "dest": "/$1" },
+    { "src": "/(.*)", "dest": "/index.html", "status": 200 }
   ]
 }
