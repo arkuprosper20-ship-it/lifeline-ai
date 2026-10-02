@@ -55,6 +55,7 @@ export const STORAGE_KEYS = {
   syncQueue: "lifeline.syncqueue.v1",
   ui: "lifeline.ui.v1",
   auth: "lifeline.auth.v1",
+  notifications: "lifeline.notifications.v1",
 };
 
 export const MAX_REPORT_LENGTH = 2000;

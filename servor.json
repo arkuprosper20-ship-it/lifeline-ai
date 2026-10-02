@@ -3,5 +3,6 @@ server {
   static indexes index.html
   routes:
     /api/*  -> /api/*
+    /      -> /landing.html
     /*      -> /index.html
 }

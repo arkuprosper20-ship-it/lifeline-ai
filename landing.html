@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LIFELINE AI — When something happens, know what to do next</title>
+<meta name="description" content="LIFELINE AI turns reports, voice, images and location into structured incident information that helps people coordinate a response. Offline-first, with human confirmation.">
+<meta property="og:title" content="LIFELINE AI">
+<meta property="og:description" content="Turn chaos into coordinated action.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0b0d11">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c0e12'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%238b6cff' stroke-width='5'/%3E%3Cpath d='M12 34h11l4-10 7 20 5-13 2 3h11' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap">
+<style>
+:root{--bg:#0b0d11;--s1:#12151b;--s2:#191d25;--ln:#262b36;--tx:#f4f5f8;--mu:#9097a8;--vi:#8b6cff;--vi2:#b3a0ff;--or:#ff6b3d;--gr:#3dd68c;--am:#ffb23d;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0d11;--tx:#f4f5f8}}
+:root[data-theme="dark"]{--bg:#0b0d11;--tx:#f4f5f8}
+html{scroll-behavior:smooth;scroll-padding-top:calc(80px + env(safe-area-inset-top,0px))}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:400 18px/1.6 Manrope,Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:3px solid var(--vi2);outline-offset:3px;border-radius:6px}
+.wrap{width:min(1240px,100% - 48px);margin:0 auto}
+header{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);z-index:50;background:rgba(11,13,17,.72);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.06)}
+header .wrap{display:flex;align-items:center;gap:32px;height:72px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.12ex;font-size:17px}
+nav{display:flex;gap:28px;font-size:15px;color:var(--mu);margin-left:24px}
+nav a:hover{color:var(--tx)}
+.sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:10px;font:700 15px Manrope,sans-serif;letter-spacing:.06em;padding:15px 26px;border-radius:12px;border:1px solid var(--ln);background:transparent;color:var(--tx);cursor:pointer;transition:transform .2s,background .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn.p{background:var(--vi);border-color:var(--vi);color:#fff;box-shadow:0 10px 34px rgba(139,108,255,.35)}
+.btn.p:hover{background:#9b80ff}
+.btn.sm{padding:11px 18px;font-size:13px}
+.eyebrow{font-size:13px;letter-spacing:.2ex;font-weight:700;color:var(--vi2);text-transform:uppercase}
+h1,h2{font-weight:800;letter-spacing:-.03em;line-height:1.02}
+h2{font-size:clamp(36px,6vw,76px);margin:14px 0 24px}
+p.lead{font-size:clamp(18px,2vw,22px);color:var(--mu);max-width:640px}
+section{position:relative;padding:clamp(80px,12vw,160px) 0}
+.map{position:absolute;inset:0;width:100%;height:100%}
+.mask{position:absolute;inset:0;background:linear-gradient(90deg,var(--bg) 8%,rgba(11,13,17,.55) 55%,rgba(11,13,17,.2)),linear-gradient(0deg,var(--bg),rgba(11,13,17,0) 40%)}
+.photo{background:var(--s1) var(--img,none) center/cover}
+/* hero */
+.hero{min-height:100svh;display:flex;align-items:center;padding-top:120px;overflow:hidden}
+.hero h1{font-size:clamp(46px,8.4vw,120px);max-width:960px}
+.hero h1 em{font-style:normal;color:var(--vi2)}
+.hero .lead{margin:28px 0 40px}
+.cta{display:flex;flex-wrap:wrap;gap:14px;position:relative}
+.status{display:inline-flex;gap:10px;align-items:center;margin-top:44px;font-size:13px;letter-spacing:.14em;color:var(--mu);position:relative}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--gr);box-shadow:0 0 0 0 rgba(61,214,140,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 12px rgba(61,214,140,0)}100%{box-shadow:0 0 0 0 rgba(61,214,140,0)}}
+.float{position:absolute;right:max(24px,calc((100% - 1240px)/2));bottom:12%;width:340px;background:rgba(18,21,27,.88);backdrop-filter:blur(10px);border:1px solid var(--ln);border-radius:20px;padding:24px;display:none}
+@media(min-width:1050px){.float{display:block}}
+.chip{display:inline-flex;gap:8px;align-items:center;font-size:12px;font-weight:800;letter-spacing:.1ex;padding:6px 14px;border-radius:100px}
+.chip.or{background:rgba(255,107,61,.14);color:var(--or);border:1px solid rgba(255,107,61,.45)}
+.chip.vi{background:rgba(139,108,255,.14);color:var(--vi2);border:1px solid rgba(139,108,255,.5)}
+.chip.am{background:rgba(255,178,61,.12);color:var(--am);border:1px solid rgba(255,178,61,.25)}
+.chip.gr{background:rgba(61,214,140,.12);color:var(--gr);border:1px solid rgba(61,214,140,.45)}
+/* problem */
+.problem{background:var(--s1);overflow:hidden}
+.three{display:grid;gap:0;margin-top:56px;border-top:1px solid var(--ln)}
+.three div{padding:32px 0;border-bottom:1px solid var(--ln);font-size:clamp(24px,3.6vw,46px);font-weight:700;letter-spacing:-.02em;line-height:1.15;display:flex;gap:28px;align-items:baseline}
+.three span{font-size:14px;color:var(--vi2);letter-spacing:.14ex}
+.bridge{margin-top:64px;font-size:clamp(28px,4.6vw,58px);font-weight:800;letter-spacing:-.025em;color:var(--vi2)}
+/* steps */
+.grid4{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:56px}
+.card{background:var(--s1);border:1px solid var(--ln);border-radius:20px;padding:34px;min-height:290px;transition:transform .3s,border-color .3s}
+.card:hover{transform:translateY(-6px);border-color:var(--vi)}
+.card .n{font-size:14px;letter-spacing:.2ex;color:var(--vi2);font-weight:800}
+.card h3{font-size:30px;letter-spacing:-.01em;margin:44px 0 12px}
+.card p{color:var(--mu);font-size:16px;line-height:1.55}
+/* map section */
+.mapsec{padding:0;min-height:90svh;display:flex;align-items:center;overflow:hidden}
+.mapsec .wrap{position:relative;padding:clamp(80px,10vw,140px) 0;display:grid;gap:40px;grid-template-columns:1fr}
+@media(min-width:960px){.mapsec .wrap{grid-template-columns:1fr 420px;align-items:end}}
+.mk{position:absolute;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:.12ex;transform:translate(-50%,-50%);z-index:2}
+.mk i{width:22px;height:22px;border-radius:50%;border:3px solid #fff;display:block}
+.mk.you i{background:var(--vi)}.mk.inc i{background:var(--or);animation:pulse 2s infinite}
+.mk span{background:rgba(11,13,17,.85);padding:5px 10px;border-radius:8px}
+.acc{position:absolute;border-radius:50%;border:2px solid rgba(179,160,255,.7);background:rgba(139,108,255,.16);transform:translate(-50%,-50%)}
+.panel{position:relative;z-index:3;background:rgba(18,21,27,.92);backdrop-filter:blur(10px);border:1px solid var(--ln);border-radius:22px;padding:30px}
+.panel .id{font:500 13px ui-monospace,Menlo,monospace;color:var(--mu);letter-spacing:.08ex}
+.panel h4{font-size:30px;letter-spacing:-.01em;margin:12px 0 10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.panel p{color:#cfd3de;font-size:17px}
+.loc{margin-top:22px;padding-top:18px;border-top:1px solid var(--ln);display:flex;justify-content:space-between;font-size:14px;color:var(--mu)}
+.loc b{color:var(--tx)}
+/* voice */
+.split{display:grid;gap:56px;align-items:center}
+@media(min-width:960px){.split{grid-template-columns:1fr 1fr}}
+.phone{background:var(--s1);border:1px solid var(--ln);border-radius:28px;padding:34px;min-height:380px}
+.wave{display:flex;gap:5px;align-items:center;height:70px;margin:24px 0}
+.wave i{flex:1;max-width:8px;background:var(--vi);border-radius:4px;height:14px;animation:wv 1.1s ease-in-out infinite}
+@keyframes wv{50%{height:64px}}
+.q{font-size:22px;font-weight:600;line-height:1.35}
+.flow{display:grid;gap:14px;margin-top:20px}
+.flow div{display:flex;gap:14px;align-items:center;font-size:15px;color:var(--mu);padding:14px 18px;border:1px solid var(--ln);border-radius:14px;background:var(--bg)}
+.flow b{color:var(--tx)}
+.tag{font-size:12px;letter-spacing:.14ex;color:var(--mu)}
+/* brief */
+.brief{max-width:560px;margin:56px auto 0;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--ln);border-radius:26px;padding:42px;box-shadow:0 40px 120px rgba(0,0,0,.5)}
+.brief ul{list-style:none;margin:10px 0 24px;display:grid;gap:10px;font-size:18px}
+.brief li::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--or);margin-right:14px}
+.brief h5{font-size:12px;letter-spacing:.18ex;color:var(--mu);margin:26px 0 8px}
+.brief .btn{width:100%;justify-content:center}
+/* coordination */
+.steps{display:grid;gap:0;margin-top:60px;position:relative}
+@media(min-width:900px){.steps{grid-template-columns:repeat(5,1fr)}}
+.steps div{padding:26px 18px 26px 0;border-top:3px solid var(--ln);font-weight:700;font-size:17px;letter-spacing:.04ex;transition:color .5s,border-color .5s;color:var(--mu)}
+.steps small{display:block;font-size:12px;letter-spacing:.2ex;margin-bottom:10px;font-weight:800}
+.steps div.on{color:var(--tx);border-color:var(--vi)}
+.steps div.on small{color:var(--vi2)}
+/* conditions */
+.cond{background:#07080b}
+.cond .card{min-height:0;padding:28px}
+.cond .card h3{font-size:19px;letter-spacing:.1ex;margin:0 0 10px;color:var(--am)}
+.cond .grid4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+/* privacy */
+.pv{display:grid;gap:0;margin-top:48px;max-width:760px}
+.pv div{padding:22px 0;border-bottom:1px solid var(--ln);display:flex;gap:18px;font-size:19px}
+.pv div::before{content:"✓";color:var(--gr);font-weight:800}
+/* final */
+.final{min-height:100svh;display:flex;align-items:center;text-align:center;overflow:hidden}
+.final .mask{background:radial-gradient(ellipse at center,rgba(11,13,17,.55),var(--bg) 85%)}
+.final h2{font-size:clamp(44px,9vw,130px);margin:0 0 44px}
+.final .cta{justify-content:center}
+.final small{display:block;margin-top:44px;letter-spacing:.3ex;font-size:13px;color:var(--mu);position:relative}
+footer{padding:40px 0 56px;border-top:1px solid var(--ln);color:var(--mu);font-size:14px}
+footer .wrap{display:grid;gap:12px}
+/* motion */
+.rv{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+@media(max-width:820px){nav{display:none}header .wrap{gap:12px}.hero{padding-top:100px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+ <a class="brand" href="#top" aria-label="LIFELINE home"><svg width="34" height="34" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="28" stroke="#8b6cff" stroke-width="4"/><path d="M8 33h13l5-13 8 26 6-17 3 4h13" stroke="#b3a0ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>LIFELINE</a>
+ <nav aria-label="Primary"><a href="#how">How it works</a><a href="#map">Map</a><a href="#voice">Voice</a><a href="#resilience">Technology</a><a href="#privacy">Safety</a></nav>
+ <span class="sp"></span>
+ <a class="btn sm" href="/app">SIGN IN</a>
+ <a class="btn p sm" href="/app/report">REPORT AN INCIDENT →</a>
+</div></header>
+
+<main id="top">
+<section class="hero photo" id="hero-photo">
+ <svg class="map" data-city="1" aria-hidden="true"></svg><div class="mask"></div>
+ <div class="wrap" style="position:relative">
+  <p class="eyebrow rv">LIFELINE AI</p>
+  <h1 class="rv" style="margin-top:18px">When something happens, <em>know what to do next.</em></h1>
+  <p class="lead rv">LIFELINE AI transforms reports, voice, images and location into structured incident information that helps people coordinate a response.</p>
+  <div class="cta rv"><a class="btn p" href="/app/report">REPORT AN INCIDENT →</a><a class="btn" href="#how">EXPLORE LIFELINE</a></div>
+  <div class="status"><i class="dot"></i>SYSTEM READY</div>
+ </div>
+ <aside class="float rv" aria-label="Example incident, illustrative">
+  <div class="row"><span class="chip or">FIRE / SMOKE</span><span class="chip or">URGENT</span></div>
+  <p style="font-size:17px">Heavy smoke reported near a building. Access may be obstructed.</p>
+  <p class="tag" style="margin-top:16px">ILLUSTRATIVE EXAMPLE · AI-ASSISTED, NOT VERIFIED</p>
+ </aside>
+</section>
+
+<section class="problem">
+ <div class="wrap">
+  <p class="eyebrow rv">The problem</p>
+  <h2 class="rv">In an emergency, information gets messy.</h2>
+  <div class="three">
+   <div class="rv"><span>01</span>People describe situations differently.</div>
+   <div class="rv"><span>02</span>Important details can be missing.</div>
+   <div class="rv"><span>03</span>Location and communication can become fragmented.</div>
+  </div>
+  <p class="bridge rv">LIFELINE brings them together.</p>
+ </div>
+</section>
+
+<section id="how">
+ <div class="wrap">
+  <p class="eyebrow rv">How it works</p>
+  <h2 class="rv">Four steps. One clear incident.</h2>
+  <div class="grid4">
+   <div class="card rv"><div class="n">01 — REPORT</div><h3>Say what you see.</h3><p>Describe it by text or voice, or attach an image.</p></div>
+   <div class="card rv"><div class="n">02 — UNDERSTAND</div><h3>Structured, not vague.</h3><p>AI, or local fallback when AI is unavailable, extracts the category, urgency and observations.</p></div>
+   <div class="card rv"><div class="n">03 — LOCATE</div><h3>Shown on the map.</h3><p>With your permission, your location appears directly on the LIFELINE map with its accuracy.</p></div>
+   <div class="card rv"><div class="n">04 — COORDINATE</div><h3>You confirm first.</h3><p>Review the incident, then share it through an available communication channel.</p></div>
+  </div>
+ </div>
+</section>
+
+<section class="mapsec photo" id="map">
+ <svg class="map" data-city="2" aria-hidden="true"></svg><div class="mask" style="background:linear-gradient(0deg,var(--bg),rgba(11,13,17,.1) 45%,rgba(11,13,17,.4))"></div>
+ <div class="acc" style="left:42%;top:56%;width:130px;height:130px"></div>
+ <div class="mk you" style="left:42%;top:56%"><i></i><span>YOU</span></div>
+ <div class="mk inc" style="left:56%;top:44%"><i></i><span>INCIDENT</span></div>
+ <div class="wrap">
+  <div><p class="eyebrow rv">The LIFELINE map</p><h2 class="rv">Know where it is.</h2><p class="lead rv">Your location and the incident appear on a map that stays inside LIFELINE. No jumping to another app.</p></div>
+  <div class="panel rv">
+   <div class="id">INCIDENT BRIEF · EXAMPLE</div>
+   <h4>Fire / Smoke</h4>
+   <div class="row"><span class="chip or">URGENT</span><span class="chip am">NEEDS VERIFICATION</span></div>
+   <p>Heavy smoke reported near a building.</p>
+   <div class="loc"><span>LOCATION FOUND</span><b>±24 m</b></div>
+  </div>
+ </div>
+</section>
+
+<section id="voice" style="background:var(--s1)">
+ <div class="wrap split">
+  <div>
+   <p class="eyebrow rv">Voice and language</p>
+   <h2 class="rv">Speak naturally. LIFELINE understands.</h2>
+   <p class="lead rv">Report in your own words. LIFELINE keeps the original language of the report alongside its analysis.</p>
+  </div>
+  <div class="phone rv">
+   <div class="tag">VOICE INPUT · ILLUSTRATIVE FLOW</div>
+   <div class="wave" aria-hidden="true"></div>
+   <p class="q">“There's smoke coming from the building…”</p>
+   <div class="flow">
+    <div>LANGUAGE <b>Detected</b></div>
+    <div>TRANSCRIPTION <b>Original text kept</b></div>
+    <div>ANALYSIS <b>FIRE / SMOKE · URGENT</b></div>
+   </div>
+   <p class="tag" style="margin-top:18px">Voice and language support depends on your browser and device.</p>
+  </div>
+ </div>
+</section>
+
+<section>
+ <div class="wrap">
+  <p class="eyebrow rv" style="text-align:center">AI incident brief</p>
+  <h2 class="rv" style="text-align:center;margin-inline:auto;max-width:900px">Clear enough to check. Fast enough to use.</h2>
+  <div class="brief rv">
+   <div class="row"><span class="chip vi">AI ANALYSIS</span><span class="chip or">URGENT</span></div>
+   <h4 style="font-size:36px;letter-spacing:-.02em">FIRE / SMOKE</h4>
+   <p style="color:#cfd3de;margin-top:8px">Heavy smoke reported near a building.</p>
+   <h5>OBSERVATIONS</h5>
+   <ul><li>Smoke reported</li><li>Access may be blocked</li><li>Exact source unconfirmed</li></ul>
+   <h5>LOCATION</h5>
+   <p style="font:500 18px ui-monospace,Menlo,monospace">5.6037, -0.1870 &nbsp;<span style="color:var(--mu)">±24 m</span></p>
+   <div style="margin-top:30px"><a class="btn p" href="/app/report">REVIEW INCIDENT</a></div>
+  </div>
+ </div>
+</section>
+
+<section style="background:var(--s1)">
+ <div class="wrap">
+  <p class="eyebrow rv">Coordination</p>
+  <h2 class="rv">From a report to coordinated action.</h2>
+  <div class="steps" id="steps">
+   <div><small>01</small>REPORT RECEIVED</div><div><small>02</small>AI ANALYZED</div><div><small>03</small>LOCATION ATTACHED</div><div><small>04</small>INCIDENT VERIFIED</div><div><small>05</small>RESPONSE COORDINATED</div>
+  </div>
+ </div>
+</section>
+
+<section class="cond" id="resilience">
+ <div class="wrap">
+  <p class="eyebrow rv">Built for imperfect conditions</p>
+  <h2 class="rv">LIFELINE keeps working when things go wrong.</h2>
+  <div class="grid4">
+   <div class="card rv"><h3>NO AI CONNECTION</h3><p>Local analysis takes over.</p></div>
+   <div class="card rv"><h3>NO LOCATION</h3><p>The report continues without GPS.</p></div>
+   <div class="card rv"><h3>NO TWILIO</h3><p>Device SMS or phone fallback.</p></div>
+   <div class="card rv"><h3>NO INTERNET</h3><p>The incident is queued for synchronization, and marked as not yet sent.</p></div>
+   <div class="card rv"><h3>NO SPEECH SUPPORT</h3><p>Type your report instead.</p></div>
+  </div>
+ </div>
+</section>
+
+<section id="privacy">
+ <div class="wrap">
+  <p class="eyebrow rv">Safety and privacy</p>
+  <h2 class="rv">Your information stays purposeful.</h2>
+  <div class="pv">
+   <div class="rv">Location isn't requested automatically.</div>
+   <div class="rv">Precise location isn't publicly exposed by default.</div>
+   <div class="rv">You review information before any consequential communication.</div>
+   <div class="rv">Provider credentials remain server-side.</div>
+   <div class="rv">Community views can use approximate locations.</div>
+  </div>
+ </div>
+</section>
+
+<section class="final photo">
+ <svg class="map" data-city="3" aria-hidden="true"></svg><div class="mask"></div>
+ <div class="wrap" style="position:relative">
+  <h2 class="rv">When something happens,<br>LIFELINE is ready.</h2>
+  <div class="cta rv"><a class="btn p" href="/app/report">REPORT AN INCIDENT →</a></div>
+  <small>AI · LOCATION · MAP · COORDINATION</small>
+ </div>
+</section>
+</main>
+
+<footer><div class="wrap">
+ <div><strong style="color:var(--tx);letter-spacing:.12ex">LIFELINE AI</strong> &nbsp;Turn chaos into coordinated action.</div>
+ <div>LIFELINE AI does not replace emergency services and does not independently verify emergencies. In immediate danger, contact your local emergency number.</div>
+</div></footer>
+
+<script>
+// fictional district map, generated (swap for photography via --img on any .photo section)
+function city(svg,seed){var s=seed,r=function(){return(s=(s*16807)%2147483647)/2147483647},W=1600,H=900,c=130,h='<rect width="'+W+'" height="'+H+'" fill="#1b202b"/>',f=['#12151b','#151a22','#10131a','#171c25'];
+ for(var x=0;x<W;x+=c)for(var y=0;y<H;y+=c){var bx=x+12,by=y+12,bw=c-24,bh=c-24;
+  if(r()<.07){h+='<rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh+'" rx="6" fill="#10201a"/>';continue}
+  var nx=1+(r()*3|0),ny=1+(r()*3|0);
+  for(var i=0;i<nx;i++)for(var j=0;j<ny;j++)if(r()>.1)h+='<rect x="'+(bx+i*bw/nx+3)+'" y="'+(by+j*bh/ny+3)+'" width="'+(bw/nx-6)+'" height="'+(bh/ny-6)+'" rx="3" fill="'+f[r()*4|0]+'"/>'}
+ h+='<line x1="-50" y1="700" x2="1650" y2="150" stroke="#242a37" stroke-width="22"/>';
+ svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('preserveAspectRatio','xMidYMid slice');svg.innerHTML=h}
+document.querySelectorAll('svg[data-city]').forEach(function(e){city(e,+e.dataset.city*977+3)});
+// waveform bars
+var w=document.querySelector('.wave');for(var i=0;i<34;i++){var b=document.createElement('i');b.style.animationDelay=(i*.07)+'s';b.style.opacity=.5+Math.random()*.5;w.appendChild(b)}
+// reveal on scroll
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.15});
+document.querySelectorAll('.rv').forEach(function(e,i){e.style.transitionDelay=(i%4)*70+'ms';io.observe(e)});
+// coordination steps light up in sequence
+var st=document.querySelectorAll('#steps div'),so=new IntersectionObserver(function(es){if(es[0].isIntersecting){st.forEach(function(d,i){setTimeout(function(){d.classList.add('on')},i*650)});so.disconnect()}},{threshold:.5});so.observe(document.getElementById('steps'));
+</script>
+</body>
+</html>

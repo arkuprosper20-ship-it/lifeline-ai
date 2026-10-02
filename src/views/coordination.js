@@ -50,6 +50,12 @@ export function initCoordinationScreen() {
       </div>
 
       <div class="card">
+        <h3>Incident Map</h3>
+        <div id="dashboard-map" style="height:300px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-primary);"></div>
+        <p class="mu text-small" style="margin-top:8px;">Markers show incident locations. Click a marker for full details. Precise coordinates are visible to authorized coordinators only.</p>
+      </div>
+
+      <div class="card">
         <h3>Response contacts</h3>
         <div style="max-height:250px; overflow-y:auto;">
           ${getEnabledContacts().map(c => `
@@ -77,7 +83,7 @@ export function initCoordinationScreen() {
                   Escalation: ${esc(getStatusLabel(incident.status))} · ${formatTimeAgo(incident.lastEscalation.at)}
                 </div>
               </div>
-              ${incident.lastEscalation.channels.sms?.status === "sent" ? `<span class="badge badge-ready">SMS sent</span>` : ""}
+                 ${incident.lastEscalation && incident.lastEscalation.status === "SENT" ? `<span class="badge badge-ready">SMS sent</span>` : incident.lastEscalation && incident.lastEscalation.status === "COMPOSER_OPENED" ? `<span class="badge badge-warning">SMS composer opened</span>` : incident.lastEscalation ? `<span class="badge badge-monitor">${esc(incident.lastEscalation.status)}</span>` : ""}
             </div>
           `;
         }).join('') : '<p class="mu">No recent escalations.</p>'}

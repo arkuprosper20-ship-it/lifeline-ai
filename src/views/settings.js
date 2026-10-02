@@ -3,6 +3,7 @@ import { getState, store } from "../store.js";
 import { saveContacts } from "../contacts.js";
 import { getEnabledContacts, resetToDefaultContacts } from "../contacts.js";
 import { esc } from "../ui.js";
+import { fetchProviderConfig } from "../notification-providers.js";
 
 export function initSettingsScreen() {
   const state = getState();
@@ -58,6 +59,25 @@ export function initSettingsScreen() {
       </div>
 
       <div class="card">
+        <h3>Notifications</h3>
+        <p class="mu" style="margin-bottom:8px;">
+          ${state.notificationConfig ? (state.notificationConfig.twilioConfigured ? "SMS provider: Twilio (configured)" : "SMS provider: Device SMS fallback (Twilio not configured)") : "Checking notification configuration…"}
+        </p>
+        <p class="mu text-small" style="margin-bottom:8px;">
+          Twilio is <b>optional</b>. Without it, LIFELINE opens your device SMS composer or dialer
+          instead of sending through an API. No SMS API credentials are required to use LIFELINE.
+        </p>
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <input type="checkbox" id="demo-mode-toggle" ${state.settings.demoMode ? "checked" : ""} />
+          Demo Mode (simulated notifications, no real sends)
+        </label>
+        <button type="button" class="btn btn-secondary btn-sm" id="refresh-notifications" style="margin-top:8px;">Refresh provider status</button>
+        <p class="mu text-small" style="margin-top:8px;">
+          <a href="#/help" data-action="navigate" data-to="help" style="color:var(--accent);">Configure Twilio →</a>
+        </p>
+      </div>
+
+      <div class="card">
         <h3>Offline storage</h3>
         <p class="mu">
           ${state.syncQueue?.length || 0} report(s) waiting to sync.
@@ -90,6 +110,17 @@ export function setupSettingsHandlers() {
   });
   document.getElementById("location-mode")?.addEventListener("change", (e) => {
     store.setSettings({ locationDefault: e.target.value });
+  });
+
+  const refreshConfig = async () => {
+    const config = await fetchProviderConfig();
+    store.setNotificationConfig(config);
+    initSettingsScreen();
+  };
+  document.getElementById("refresh-notifications")?.addEventListener("click", refreshConfig);
+
+  document.getElementById("demo-mode-toggle")?.addEventListener("change", (e) => {
+    store.setSettings({ demoMode: e.target.checked });
   });
   document.getElementById("clear-storage")?.addEventListener("click", () => {
     if (confirm("Clear all local data? This cannot be undone.")) {

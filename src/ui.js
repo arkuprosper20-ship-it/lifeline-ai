@@ -72,16 +72,27 @@ function initMap(containerId, lat, lng, zoom, markers) {
   return map;
 }
 
-function loadLeaflet() {
+export function loadLeaflet() {
   return new Promise((resolve) => {
     if (typeof L !== "undefined") { resolve(); return; }
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://unpkg.com/leaflet@1.9.5/dist/leaflet.css";
+    link.href = "/leaflet/leaflet.css";
     document.head.appendChild(link);
     const script = document.createElement("script");
-    script.src = "https://unpkg.com/leaflet@1.9.5/dist/leaflet.js";
-    script.onload = resolve;
+    script.src = "/leaflet/leaflet.js";
+    script.onload = () => {
+      // Fix Leaflet's default icon paths to use our local images
+      if (typeof L !== "undefined" && L.Icon && L.Icon.Default) {
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconUrl: '/leaflet/images/marker-icon.png',
+          iconRetinaUrl: '/leaflet/images/marker-icon-2x.png',
+          shadowUrl: '/leaflet/images/marker-shadow.png',
+        });
+      }
+      resolve();
+    };
     document.head.appendChild(script);
   });
 }

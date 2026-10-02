@@ -1,0 +1,22 @@
+{
+  "name": "lifeline-ai",
+  "version": "1.0.0",
+  "description": "AI-powered community incident intelligence and response routing",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "start": "node dev-server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "incident",
+    "reporting",
+    "pwa",
+    "leaflet",
+    "offline-first",
+    "ai"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

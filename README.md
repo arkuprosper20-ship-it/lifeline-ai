@@ -66,6 +66,64 @@ LIFELINE AI provides a unified platform that:
 
 ---
 
+## Interactive Map
+
+LIFELINE includes a full operational incident map built with **Leaflet** and **OpenStreetMap** tiles. **No paid map API key is required for the core map.** Access it from `Launch App → 🗺 Map`, or from the **Incident Map** panel in the coordination dashboard.
+
+**Map technology**
+- Library: [Leaflet](https://leafletjs.com/) (loaded from the `unpkg.com` CDN)
+- Tiles: [OpenStreetMap](https://www.openstreetmap.org/) — `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
+- No Google Maps API key is required. Google Maps links are generated as shareable URLs only.
+
+**Attribution**
+- © OpenStreetMap contributors. Tiles © openstreetmap.org. Map data © OSM contributors.
+
+**Features**
+- Full interactive map with pan, zoom, and tile layers
+- Incident markers with status-based icons (REPORTED, NEEDS VERIFICATION, VERIFIED, RESOLVED) — icons + text, not color alone
+- Current-location marker with accuracy circle
+- **LOCATE ME** — requests browser geolocation and captures latitude, longitude, accuracy, and timestamp
+- Category, urgency, and status filters, plus an "All" reset
+- Incident search by ID, type, or summary
+- Marker popups with incident ID, category, urgency, status, time, summary, and accuracy
+- **VIEW INCIDENT** opens a detail side panel (id, what happened, category, urgency, status, location, accuracy, source, AI/fallback analysis, recommended response, location link, attachments, audit history)
+- Coordination dashboard map panel grouped by ACTIVE, NEEDS VERIFICATION, VERIFIED, RESOLVED
+- Location link (`https://www.google.com/maps?q=LAT,LNG`) with `OPEN IN GOOGLE MAPS` and `COPY LOCATION LINK`
+
+**Location permissions**
+LIFELINE uses the **Browser Geolocation API** (`navigator.geolocation.getCurrentPosition`). It never fabricates coordinates. Clicking `LOCATE ME` walks through these states:
+
+| State | Meaning |
+| --- | --- |
+| `REQUESTING LOCATION` | Permission prompt / high-accuracy lookup in progress |
+| `LOCATION AVAILABLE` | Coordinates captured with acceptable accuracy |
+| `LOW ACCURACY` | Captured, but accuracy > 100 m — use with caution |
+| `LOCATION DENIED` | Permission denied — enable in browser settings |
+| `LOCATION UNAVAILABLE` | Position unavailable or timed out |
+| `MAP OFFLINE` | Device is offline; tiles cannot load |
+| `NO LOCATION PROVIDED` | No location was shared |
+
+**Privacy behavior**
+- Incidents are plotted only when they carry a **public** or **approximate** location (or a location the reporter explicitly shared).
+- Precise coordinates for **private** locations are visible only to authorized coordinators (dashboard view).
+- The user's current location is never reused as an incident's coordinate.
+- Public incidents may display a generalized/approximate location when the source is private.
+
+**Demo mode**
+When a user has no incidents with captured coordinates, the map renders safe **demo incidents** (clearly labeled `DEMO MODE`) so the interface is never empty. Demo coordinates are fictional and never represent the user's real location.
+
+**Offline limitations**
+- Map **tiles require an internet connection**. When offline, the map shows a `MAP OFFLINE` banner and does not claim to be live.
+- Incidents and reports stored locally remain available in the incident list and detail panel.
+- Coordinates are never fabricated to simulate a position.
+
+**Map setup**
+1. No map API key is needed. Leaflet and OSM load automatically from CDNs.
+2. To capture live location, serve the app over `http`/`https` (not `file://`) and grant the browser geolocation permission.
+3. In production, set `ALLOWED_ORIGINS` to your deployed domain via **Vercel → Project Settings → Environment Variables** (CORS is host-matched by `api/notify.js`).
+
+---
+
 ## Smart Escalation
 
 LIFELINE uses a layered decision architecture:
@@ -296,6 +354,8 @@ python -m http.server 8080
 # Open http://localhost:8080
 ```
 
+**Interactive Map setup:** The map loads Leaflet + OpenStreetMap tiles from CDN — **no API key required**. To test the `LOCATE ME` button and current-location capture, serve the app over `http://localhost` (or `https`) and grant the browser geolocation permission when prompted. Opening `index.html` directly via `file://` will not work due to ES module CORS restrictions.
+
 For full backend support (SMS/email/webhook), deploy with Vercel or any Node.js server that supports `/api/*` routes.
 
 ---
@@ -363,6 +423,8 @@ Demo contacts use clearly fictional numbers. No real emergency services will be 
 - SMS/email require server-side configuration
 - The coordination dashboard requires authentication
 - Offline incidents sync only when connectivity is restored
+- **Map tiles require an internet connection.** When offline, the map shows a `MAP OFFLINE` banner and does not claim to be live; however, incident data and reports stored locally remain available in the incident list and detail panel.
+- Coordinates are never fabricated to simulate a map position.
 
 ---
 

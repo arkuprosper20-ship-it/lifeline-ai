@@ -1,23 +1,42 @@
 // LIFELINE AI — Confirmation screen
 import { getState, store } from "../store.js";
 import { getRecommendedContact, buildIncidentPackage } from "../contacts.js";
-import { createLocationLink } from "../location.js";
-import { esc } from "../ui.js";
+import { esc, showToast } from "../ui.js";
 import { INCIDENT_TYPES } from "../types.js";
+import {
+  NOTIFICATION_STATUS,
+  selectProvider,
+  buildFullMessage,
+  buildDeviceSMSLink,
+  buildPhoneLink,
+  buildLocationLink,
+  buildCopyableMessage,
+  buildNotificationObject,
+  fetchProviderConfig,
+  providerRequiresOnline,
+} from "../notification-providers.js";
+import { enqueueNotification, readNotifications } from "../sync.js";
 
 export function initConfirmScreen(params = {}) {
   const state = getState();
-  const incident = params.incidentId ? state.incidents.find(i => i.id === params.incidentId) : state.ui.selectedIncident || state.incidents[0];
+  const incident = params.incidentId
+    ? state.incidents.find((i) => i.id === params.incidentId)
+    : state.ui.selectedIncident || state.incidents[0];
   if (!incident) return '<div class="card"><p>No incident found.</p></div>';
 
-  const typeInfo = INCIDENT_TYPES.find(t => t.id === incident.type) || { label: "Unknown", icon: "❓" };
-  const contact = state.contacts.find(c => c.id === state.ui.selectedContact) || getRecommendedContact(incident.type);
+  const typeInfo = INCIDENT_TYPES.find((t) => t.id === incident.type) || { label: "Unknown", icon: "❓", color: "type-other" };
+  const contact = state.contacts.find((c) => c.id === (state.ui.selectedContact || params.contact)) || getRecommendedContact(incident.type);
   const pkg = buildIncidentPackage(incident);
+  const config = state.notificationConfig || { smsProvider: "device-sms", twilioConfigured: false, emailConfigured: false, webhookConfigured: false, configured: false };
+  const isDemo = state.demoMode;
+  const provider = selectProvider(config, contact, isDemo);
+
+  const providerNote = getProviderNote(provider, config);
 
   return `
     <div class="confirm-screen">
       <div class="card">
-        <h2>Review &amp; Confirm</h2>
+        <h2>Ready to send</h2>
         <p class="mu">Review exactly what will be shared with the response contact.</p>
       </div>
 
@@ -29,13 +48,25 @@ export function initConfirmScreen(params = {}) {
       </div>
 
       <div class="card">
-        <h3>Channel</h3>
+        <h3>Method</h3>
         <div class="btn-row">
-          ${contact?.call && contact.phone ? `<span class="tag tag-gray">📞 Voice call</span>` : ""}
-          ${contact?.sms && contact.phone ? `<span class="tag tag-gray">💬 SMS</span>` : ""}
-          ${contact?.email && contact.email ? `<span class="tag tag-gray">✉️ Email</span>` : ""}
-          ${contact?.webhook && contact.webhook ? `<span class="tag tag-gray">🔗 Webhook</span>` : ""}
+          <span class="tag tag-gray">${esc(provider.label)}</span>
+          ${provider.provider === "demo" ? '<span class="tag tag-gray">SIMULATED</span>' : ""}
         </div>
+        <p class="mu text-small" style="margin-top:8px;">${providerNote}</p>
+      </div>
+
+      <div class="card">
+        <h3>Information to be shared</h3>
+        <ul style="list-style:none; padding-left:0;">
+          <li style="padding:4px 0;">✓ Incident summary</li>
+          <li style="padding:4px 0;">✓ Category: ${esc(typeInfo.label)}</li>
+          <li style="padding:4px 0;">✓ Urgency: ${esc((incident.urgency || "urgent").toUpperCase())}</li>
+          <li style="padding:4px 0;">✓ Location</li>
+          <li style="padding:4px 0;">✓ Location accuracy</li>
+          <li style="padding:4px 0;">✓ Map link</li>
+          <li style="padding:4px 0;">✓ Timestamp</li>
+        </ul>
       </div>
 
       <div class="card">
@@ -44,21 +75,17 @@ export function initConfirmScreen(params = {}) {
           <span style="font-size:20px;">${typeInfo.icon}</span>
           <span style="font-size:16px; font-weight:600;">${esc(typeInfo.label)}</span>
         </div>
-        <span class="badge ${getUrgencyBadge(incident.urgency || "urgent")}">${esc(incident.urgency?.toUpperCase() || "URGENT")}</span>
+        <span class="badge ${getUrgencyBadge(incident.urgency || "urgent")}">${esc((incident.urgency || "URGENT").toUpperCase())}</span>
 
-        <h4 style="margin-top:12px;">Observations</h4>
+        <h4 style="margin-top:12px;">Incident ID</h4>
+        <p class="text-small">${esc(incident.id)}</p>
+
+        <h4>Observations</h4>
         ${incident.observations?.length ? `
           <ul style="list-style:none; padding-left:0;">
-            ${incident.observations.map(o => `<li style="padding:4px 0;">✓ ${esc(o)}</li>`).join('')}
+            ${incident.observations.map((o) => `<li style="padding:4px 0;">✓ ${esc(o)}</li>`).join("")}
           </ul>
         ` : '<p class="mu">No observations.</p>'}
-
-        <h4>Missing information</h4>
-        ${incident.missingInfo?.length ? `
-          <ul style="list-style:none; padding-left:0;">
-            ${incident.missingInfo.map(m => `<li style="padding:4px 0; color:var(--text-secondary);">? ${esc(m)}</li>`).join('')}
-          </ul>
-        ` : '<p class="mu text-muted">None detected.</p>'}
       </div>
 
       <div class="card">
@@ -68,9 +95,7 @@ export function initConfirmScreen(params = {}) {
           <p><b>Longitude:</b> ${incident.location.longitude.toFixed(6)}</p>
           <p><b>Accuracy:</b> ${incident.location.accuracy ? `±${Math.round(incident.location.accuracy)}m` : "Unknown"}</p>
           <p><b>Type:</b> ${esc(incident.location.sourceLabel || incident.location.source)}</p>
-          <a href="${pkg.mapLink}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">
-            OPEN MAP
-          </a>
+          <a href="${pkg.mapLink}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">OPEN MAP</a>
         ` : '<p class="mu">No location captured.</p>'}
       </div>
 
@@ -84,9 +109,13 @@ export function initConfirmScreen(params = {}) {
 
       <div class="card">
         <div class="btn-row">
+          <button class="btn btn-secondary" data-action="navigate" data-to="escalation">EDIT</button>
           <button class="btn btn-secondary" data-action="navigate" data-to="escalation">CANCEL</button>
-          <button class="btn btn-primary" data-action="send-escalation" data-contact="${contact?.id || ''}">
-            CONFIRM &amp; SHARE
+          <button class="btn btn-primary" id="confirm-send-btn"
+            data-action="confirm-send"
+            data-contact="${contact?.id || ""}"
+            ${provider.provider === "none" ? "disabled" : ""}>
+            CONFIRM &amp; SEND
           </button>
         </div>
       </div>
@@ -94,97 +123,298 @@ export function initConfirmScreen(params = {}) {
   `;
 }
 
+function getProviderNote(provider, config) {
+  if (provider.provider === "demo") {
+    return "DEMO MODE: no real message will be sent. Status will show as SIMULATED.";
+  }
+  if (provider.provider === "twilio") {
+    return "SMS will be sent through the configured Twilio account (server-side).";
+  }
+  if (provider.provider === "device-sms") {
+    return "Twilio is not configured. Your device SMS composer will open. Delivery is handled by your carrier.";
+  }
+  if (provider.provider === "email") {
+    return config && config.emailConfigured ? "Email will be sent through the configured provider." : "No email provider configured server-side.";
+  }
+  if (provider.provider === "webhook") {
+    return config && config.webhookConfigured ? "A structured JSON payload will be POSTed to the configured webhook." : "No webhook configured server-side.";
+  }
+  if (provider.provider === "phone") {
+    return "Your device dialer will open. Call status is handled by your device.";
+  }
+  return "No notification method is available. Use COPY INCIDENT MESSAGE to share manually.";
+}
+
 export async function setupConfirmHandlers() {
-  const sendBtn = document.querySelector('[data-action="send-escalation"]');
-  if (sendBtn) {
-    sendBtn.addEventListener("click", async () => {
-      const contactId = sendBtn.dataset.contact;
-      const state = getState();
-      const incident = state.ui.selectedIncident || state.incidents[0];
-      if (!incident) return;
+  const sendBtn = document.getElementById("confirm-send-btn");
+  if (!sendBtn) return;
 
-      const contact = state.contacts.find(c => c.id === contactId) || getRecommendedContact(incident.type);
-      if (!contact) {
-        showError("No contact configured for this incident type.");
-        return;
-      }
+  sendBtn.addEventListener("click", async () => {
+    const contactId = sendBtn.dataset.contact;
+    const state = getState();
+    const incident = state.ui.selectedIncident || state.incidents[0];
+    if (!incident) return;
 
-      if (!contact.enabled) {
-        showError("Contact is not enabled. Enable it in Settings first.");
-        return;
-      }
+    const contact = state.contacts.find((c) => c.id === contactId) || getRecommendedContact(incident.type);
+    if (!contact) {
+      showToast("No response contact configured for this incident type.");
+      return;
+    }
+    if (!contact.enabled) {
+      showToast("Contact is not enabled. Enable it in Settings first.");
+      return;
+    }
+    if (!state.notificationConfig) {
+      state.notificationConfig = await fetchProviderConfig();
+      store.setNotificationConfig(state.notificationConfig);
+    }
 
-      sendBtn.disabled = true;
-      sendBtn.textContent = "Sending...";
+    const pkg = buildIncidentPackage(incident);
+    const isDemo = state.demoMode;
+    const provider = selectProvider(state.notificationConfig, contact, isDemo);
 
-      const pkg = buildIncidentPackage(incident);
+    if (!isDemo && provider.provider === "none") {
+      showToast("No notification method available. Copy the prepared message to share manually.");
+      return;
+    }
 
-      let smsResult = { status: "not_attempted", delivered: false };
-      let callResult = { status: "not_attempted", delivered: false };
-      let emailResult = { status: "not_attempted", delivered: false };
-      let webhookResult = { status: "not_attempted", delivered: false };
+    if (!isDemo && !contact.enabled) {
+      showToast("Contact is not enabled. Enable it in Settings first.");
+      return;
+    }
 
-      async function sendNotification(channelType) {
-        try {
-          const response = await fetch("/api/notify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type: channelType, contact, incident: pkg }),
-          });
-          if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            return { status: "failed", delivered: false, error: data.error || `Request failed (${response.status})` };
-          }
-          const data = await response.json();
-          return { status: "sent", delivered: data.result?.delivered || false, error: null };
-        } catch (error) {
-          return { status: "failed", delivered: false, error: error.message };
-        }
-      }
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Sending...";
 
-      if (contact.sms && contact.phone) {
-        smsResult = await sendNotification("sms");
-      }
-      if (contact.call && contact.phone) {
-        window.location.href = contact.phone;
-        callResult = { status: "dialer_opened", delivered: true };
-      }
-      if (contact.email && contact.email) {
-        emailResult = await sendNotification("email");
-      }
-      if (contact.webhook && contact.webhook) {
-        webhookResult = await sendNotification("webhook");
-      }
+    try {
+      const escalation = await dispatchNotification(provider, contact, pkg, incident);
+      store.updateIncident(incident.id, escalation.updates);
 
-      store.updateIncident(incident.id, {
-        status: "active",
-        lastEscalation: {
-          at: Date.now(),
-          contact: contact.id,
-          channels: { sms: smsResult, call: callResult, email: emailResult, webhook: webhookResult },
-        },
-      });
+      state.ui.needsRender = true;
+      sendBtn.disabled = false;
+      sendBtn.textContent = "CONFIRM & SEND";
 
       const url = new URL(window.location);
       url.hash = "#delivery";
       url.searchParams.set("incident", incident.id);
       window.location.href = url.toString();
+    } catch (error) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = "CONFIRM & SEND";
+      console.error("[LIFELINE] Escalation failed:", error);
+      showToast("Escalation failed: " + (error.message || "unknown error"));
+    }
+  });
+}
+
+// Dispatch a notification through the selected provider.
+// Returns { updates } to persist on the incident.
+async function dispatchNotification(provider, contact, pkg, incident) {
+  const isDemo = provider.provider === "demo";
+  const notification = buildNotificationObject(pkg, contact, provider.provider, NOTIFICATION_STATUS.READY);
+
+  // Offline handling: server-side providers cannot be reached while offline.
+  // Device SMS / phone links work locally and need no connectivity.
+  if (!isDemo && providerRequiresOnline(provider.provider) && !navigator.onLine) {
+    const queued = enqueueNotification({
+      incidentId: pkg.incidentId,
+      contactId: contact.id,
+      type: provider.provider,
+      pkg,
     });
+    const channel = {
+      provider: provider.provider,
+      method: provider.provider === "twilio" ? "SMS" : provider.provider === "email" ? "Email" : "Webhook",
+      status: NOTIFICATION_STATUS.QUEUED,
+      delivered: false,
+      note: "Offline — notification queued. It will send automatically when the connection returns. You can also retry from the delivery screen.",
+      messageId: null,
+      error: null,
+      queueId: queued.id,
+    };
+    notification.provider = provider.provider;
+    notification.status = NOTIFICATION_STATUS.QUEUED;
+    notification.delivered = false;
+    notification.note = channel.note;
+    return {
+      updates: {
+        status: "queued",
+        lastEscalation: {
+          at: Date.now(),
+          contact: contact.id,
+          contactName: contact.name,
+          provider: provider.provider,
+          method: channel.method,
+          status: NOTIFICATION_STATUS.QUEUED,
+          delivered: false,
+          note: channel.note,
+          messageId: null,
+          error: null,
+          channels: { [provider.provider]: channel },
+          notification,
+        },
+      },
+    };
   }
+
+  let channel;
+  let overall;
+
+  if (isDemo) {
+    channel = {
+      provider: "demo",
+      method: "DEMO",
+      status: NOTIFICATION_STATUS.SIMULATED,
+      delivered: false,
+      note: "Demo notification — no real message was sent.",
+      messageId: null,
+      error: null,
+    };
+    overall = {
+      provider: "demo",
+      method: "DEMO notification",
+      status: NOTIFICATION_STATUS.SIMULATED,
+      delivered: false,
+      note: "SIMULATED: no real communication was performed.",
+      messageId: null,
+      error: null,
+    };
+    notification.status = NOTIFICATION_STATUS.SIMULATED;
+  } else if (provider.provider === "twilio") {
+    const result = await callNotify("sms", contact, pkg);
+    channel = mapBackendResult(result, "SMS", "twilio");
+    overall = summarizeChannel(channel, "Twilio SMS");
+  } else if (provider.provider === "device-sms") {
+    // Hand off to the device: the actual sms: link is opened from the delivery
+    // screen via an explicit "OPEN SMS COMPOSER" button so the app stays intact
+    // and the user explicitly authorises the handoff.
+    const link = buildDeviceSMSLink(contact, pkg);
+    channel = {
+      provider: "device-sms",
+      method: "SMS",
+      status: NOTIFICATION_STATUS.READY,
+      delivered: false,
+      note: "Ready to open your device SMS composer. Delivery is handled by your carrier.",
+      deviceLink: link,
+      messageId: null,
+      error: null,
+    };
+    overall = summarizeChannel(channel, "Device SMS");
+  } else if (provider.provider === "phone") {
+    const link = buildPhoneLink(contact);
+    channel = {
+      provider: "phone",
+      method: "Phone",
+      status: NOTIFICATION_STATUS.READY,
+      delivered: false,
+      note: "Ready to open your device dialer. Call status is handled by your device.",
+      deviceLink: link,
+      messageId: null,
+      error: null,
+    };
+    overall = summarizeChannel(channel, "Phone");
+  } else if (provider.provider === "email") {
+    const result = await callNotify("email", contact, pkg);
+    channel = mapBackendResult(result, "Email", "email");
+    overall = summarizeChannel(channel, "Email");
+  } else if (provider.provider === "webhook") {
+    const result = await callNotify("webhook", contact, pkg);
+    channel = mapBackendResult(result, "Webhook", "webhook");
+    overall = summarizeChannel(channel, "Webhook");
+  } else {
+    channel = {
+      provider: "none",
+      method: "Manual",
+      status: NOTIFICATION_STATUS.NOT_CONFIGURED,
+      delivered: false,
+      note: "No provider configured. Use COPY INCIDENT MESSAGE.",
+      messageId: null,
+      error: null,
+    };
+    overall = summarizeChannel(channel, "Manual");
+  }
+
+  notification.provider = channel.provider;
+  notification.status = overall.status;
+  notification.delivered = overall.delivered;
+
+  const primaryChannelKey = isDemo ? "demo" : provider.provider;
+
+  return {
+    updates: {
+      status: "active",
+      lastEscalation: {
+        at: Date.now(),
+        contact: contact.id,
+        contactName: contact.name,
+        provider: provider.provider,
+        method: overall.method,
+        status: overall.status,
+        delivered: overall.delivered,
+        note: overall.note,
+        messageId: overall.messageId || null,
+        error: overall.error || null,
+        channels: { [primaryChannelKey]: channel },
+        notification,
+      },
+    },
+  };
+}
+
+async function callNotify(type, contact, pkg) {
+  try {
+    const response = await fetch("/api/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, contact, incident: pkg }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return { success: false, error: data.error || `Request failed (${response.status})` };
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+function mapBackendResult(result, method, provider) {
+  if (!result || !result.success) {
+    const err = (result && result.error) || "Provider request failed.";
+    return { provider, method, status: NOTIFICATION_STATUS.FAILED, delivered: false, note: err, messageId: null, error: err };
+  }
+  const r = result.result || {};
+  return {
+    provider: r.provider || provider,
+    method,
+    status: r.status === "NOT CONFIGURED" ? NOTIFICATION_STATUS.NOT_CONFIGURED : r.status === "SENT" ? NOTIFICATION_STATUS.SENT : r.status === "DELIVERED" ? NOTIFICATION_STATUS.DELIVERED : NOTIFICATION_STATUS.SENT,
+    delivered: !!r.delivered,
+    note: r.note || "",
+    messageId: r.messageId || null,
+    error: r.error || null,
+  };
+}
+
+function summarizeChannel(channel, method) {
+  return {
+    provider: channel.provider,
+    method,
+    status: channel.status,
+    delivered: channel.delivered,
+    note: channel.note,
+    messageId: channel.messageId || null,
+    error: channel.error || null,
+  };
 }
 
 function getUrgencyBadge(urgency) {
   const map = {
-    information: "badge-ready", monitor: "badge-monitor", verify: "badge-verify",
-    urgent: "badge-urgent", immediate: "badge-immediate",
+    information: "badge-ready",
+    monitor: "badge-monitor",
+    verify: "badge-verify",
+    urgent: "badge-urgent",
+    immediate: "badge-immediate",
   };
   return map[urgency] || "badge-gray";
-}
-
-function showError(msg) {
-  const div = document.createElement("div");
-  div.className = "toast toast-error";
-  div.textContent = msg;
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 5000);
 }

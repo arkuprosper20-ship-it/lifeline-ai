@@ -73,6 +73,7 @@ export function initReportScreen() {
       </div>` : ''}
     </div>
   `;
+  return html;
 }
 
 function getTypeIcon(type) {

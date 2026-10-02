@@ -59,15 +59,31 @@ export function useBrowserSpeechRecognition(onResult, onError) {
   }
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const recognition = new Recognition();
-  recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.lang = "en-US";
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = navigator.language || "en-US";
   recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    onResult(transcript);
+    let finalTranscript = "";
+    let interimTranscript = "";
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript;
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+    if (finalTranscript) {
+      onResult(finalTranscript);
+    } else if (interimTranscript) {
+      onResult(interimTranscript, true);
+    }
   };
   recognition.onerror = (event) => {
     onError(new Error(event.error || "Speech recognition error."));
+  };
+  recognition.onend = () => {
+    console.log("[LIFELINE] Speech recognition ended");
   };
   return recognition;
 }

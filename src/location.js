@@ -98,3 +98,70 @@ export function locationDisplayString(loc) {
   if (loc.source === "gps") return `${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`;
   return "Unknown location";
 }
+
+export const LOCATION_STATES = {
+  REQUESTING: "REQUESTING LOCATION",
+  AVAILABLE: "LOCATION AVAILABLE",
+  DENIED: "LOCATION DENIED",
+  UNAVAILABLE: "LOCATION UNAVAILABLE",
+  LOW_ACCURACY: "LOW ACCURACY",
+  OFFLINE: "MAP OFFLINE",
+  NO_LOCATION: "NO LOCATION PROVIDED",
+};
+
+const LOW_ACCURACY_THRESHOLD_M = 100;
+
+export function resolveLocationState({ online = true, geoSupported = true, permission = "prompt", error = null, accuracy = null } = {}) {
+  if (!online) {
+    return {
+      state: LOCATION_STATES.OFFLINE,
+      message: "You are offline. Live map tiles cannot load, but incidents saved on this device remain available below.",
+    };
+  }
+  if (!geoSupported) {
+    return { state: LOCATION_STATES.UNAVAILABLE, message: "Geolocation is not supported by this browser." };
+  }
+  if (permission === "denied") {
+    return { state: LOCATION_STATES.DENIED, message: "Location permission denied. Enable it in your browser settings to use Locate Me." };
+  }
+  if (error) {
+    const code = error.code;
+    if (code === 2 || code === 3 || code === 1) {
+      if (code === 1) {
+        return { state: LOCATION_STATES.DENIED, message: "Location permission denied." };
+      }
+      return { state: LOCATION_STATES.UNAVAILABLE, message: (error.message && error.message !== "User denied Geolocation position retrieval." ? error.message : "Location unavailable.") };
+    }
+    return { state: LOCATION_STATES.UNAVAILABLE, message: error.message || "Location unavailable." };
+  }
+  if (accuracy !== null && accuracy !== undefined && Number(accuracy) > LOW_ACCURACY_THRESHOLD_M) {
+    return { state: LOCATION_STATES.LOW_ACCURACY, message: `Location accuracy is low (\u00b1${Math.round(accuracy)} m). Results may be approximate.` };
+  }
+  if (accuracy !== null && accuracy !== undefined) {
+    return { state: LOCATION_STATES.AVAILABLE, message: "Location captured." };
+  }
+  return { state: LOCATION_STATES.NO_LOCATION, message: "No location provided." };
+}
+
+export async function getPermissionState() {
+  if (!navigator.geolocation) {
+    return { state: "unavailable", granted: false, reason: "Geolocation not supported." };
+  }
+  if (!navigator.permissions || !navigator.permissions.query) {
+    return { state: "unknown", granted: false, reason: "Permission API unavailable." };
+  }
+  try {
+    const result = await navigator.permissions.query({ name: "geolocation" });
+    return { state: result.state, granted: result.state === "granted", reason: result.state };
+  } catch {
+    return { state: "unknown", granted: false, reason: "Permission check failed." };
+  }
+}
+
+export function formatGeolocationError(error) {
+  if (!error) return null;
+  if (error.code === 1) return { state: LOCATION_STATES.DENIED, message: "Location permission denied." };
+  if (error.code === 2) return { state: LOCATION_STATES.UNAVAILABLE, message: "Location unavailable." };
+  if (error.code === 3) return { state: LOCATION_STATES.UNAVAILABLE, message: "Location request timed out." };
+  return { state: LOCATION_STATES.UNAVAILABLE, message: error.message || "Location unavailable." };
+}

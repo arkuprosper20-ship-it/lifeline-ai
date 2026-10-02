@@ -1,11 +1,12 @@
 // LIFELINE AI — State Manager
 import { STORAGE_KEYS, createIncidentId, INCIDENT_TYPES } from "./types.js";
-import { DEFAULT_CONTACTS } from "./contacts.js";
+import { getDefaultContacts as DEFAULT_CONTACTS } from "./contacts.js";
 
 const state = {
   incidents: [],
   contacts: DEFAULT_CONTACTS,
-  settings: { mode: "automatic", allowGroqFallback: true, locationDefault: "ask", notifications: true, autoSync: true },
+  settings: { mode: "automatic", allowGroqFallback: true, locationDefault: "ask", notifications: true, autoSync: true, demoMode: false },
+  notificationConfig: null,
   ui: { currentView: "report", selectedIncident: null, reportText: "", imagePreview: null, imageFile: null, voiceText: null, locationText: null, location: null, isAnalyzing: false, analysisResult: null, showLocationModal: false, selectedContact: null, needsRender: false },
   syncQueue: [],
   isOnline: navigator.onLine,
@@ -46,8 +47,10 @@ function saveState() {
 }
 
 loadState();
-window.addEventListener("online", () => { state.isOnline = true; notify(); });
-window.addEventListener("offline", () => { state.isOnline = false; notify(); });
+if (typeof window !== "undefined") {
+  window.addEventListener("online", () => { state.isOnline = true; notify(); });
+  window.addEventListener("offline", () => { state.isOnline = false; notify(); });
+}
 
 export const store = {
   setIncidents(incidents) { state.incidents = incidents; saveState(); notify(); },
@@ -65,12 +68,13 @@ export const store = {
     const idx = state.contacts.findIndex(c => c.id === id);
     if (idx >= 0) { state.contacts[idx] = { ...state.contacts[idx], ...updates }; saveState(); notify(); }
   },
-  setSettings(settings) { state.settings = { ...state.settings, ...settings }; saveState(); notify(); },
+   setSettings(settings) { state.settings = { ...state.settings, ...settings }; if ("demoMode" in settings) state.demoMode = settings.demoMode; saveState(); notify(); },
   setUI(ui) { state.ui = { ...state.ui, ...ui }; saveState(); notify(); },
+  setNotificationConfig(config) { state.notificationConfig = config || state.notificationConfig; saveState(); notify(); },
+  setDemoMode(on) { state.demoMode = on; state.settings.demoMode = on; saveState(); notify(); },
   enqueueSync(item) { state.syncQueue.push({ ...item, queuedAt: Date.now() }); saveState(); notify(); },
   clearSyncQueue() { state.syncQueue = []; saveState(); notify(); },
   setUser(user) { state.currentUser = user; saveState(); notify(); },
-  setDemoMode(on) { state.demoMode = on; notify(); },
   setLocationCallback(fn) { locationCallback = fn; },
   getLocation() { return locationCallback ? locationCallback() : null; },
   save() { saveState(); },
@@ -84,10 +88,13 @@ export function initStore() {
       { id: createIncidentId(), type: "fire_smoke", title: "Smoke reported", urgency: "urgent", status: "verify", observations: ["Heavy smoke reported"], timestamp: Date.now() - 2 * 60000, location: { source: "text", description: "near community center" }, synced: true, isDemo: true },
     ];
   }
-  if (state.settings.mode === "automatic" && state.isOnline) {
-    state.settings.allowGroqFallback = true;
-  }
-  saveState();
+   if (state.settings.mode === "automatic" && state.isOnline) {
+     state.settings.allowGroqFallback = true;
+   }
+   if (state.settings.demoMode) {
+     state.demoMode = true;
+   }
+   saveState();
 }
 
 initStore();

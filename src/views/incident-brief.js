@@ -1,6 +1,7 @@
 // LIFELINE AI — Incident brief view
 import { getState, store } from "../store.js";
-import { createLocationLink, formatTimeAgo } from "../ui.js";
+import { formatTimeAgo, esc } from "../ui.js";
+import { createLocationLink } from "../location.js";
 import { INCIDENT_STATUS_LABELS, INCIDENT_TYPES } from "../types.js";
 
 export function initIncidentBrief(params = {}) {

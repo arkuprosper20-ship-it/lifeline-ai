@@ -2,11 +2,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { localAnalysis, classifyIncidentType, assessUrgency, extractObservations, detectMissingInfo, extractLocationFromText, detectSafetyOverride, findRelatedIncidents } from "../src/analyzer.js";
-import { createLocationLink, validateLocationInput, getAccuracyLabel, isAccuracyWarning } from "../src/location.js";
+import { createLocationLink, validateLocationInput, getAccuracyLabel, isAccuracyWarning, resolveLocationState, LOCATION_STATES } from "../src/location.js";
 import { createIncidentId } from "../src/types.js";
 import { getRecommendedContact, buildIncidentPackage, getContactByCategory, getAvailableChannels } from "../src/contacts.js";
 import { getDefaultContacts } from "../src/contacts.js";
 import { STORAGE_KEYS, INCIDENT_TYPES, URGENCY_LEVELS, INCIDENT_STATUS } from "../src/types.js";
+import {
+  hasCoords, resolveLocation, isLocationPlottable, applyFilters, searchIncidents, getDemoIncidents,
+  computeBounds, incidentDetailFields, statusSpec, getIncidentType, STATUS_MARKERS, URGENCY_COLORS,
+} from "../src/map-helpers.js";
 
 test("classifyIncidentType detects fire/smoke", () => {
   assert.equal(classifyIncidentType("Heavy smoke coming from a building"), "fire_smoke");
@@ -333,4 +337,155 @@ test("STORAGE_KEYS has all required keys", () => {
   assert.ok(STORAGE_KEYS.settings);
   assert.ok(STORAGE_KEYS.syncQueue);
   assert.ok(STORAGE_KEYS.ui);
+});
+
+const sampleIncidents = [
+  { id: "LF-A", type: "fire_smoke", urgency: "urgent", status: "reported", observations: ["smoke"], summary: "Smoke from building", timestamp: 1000, location: { latitude: 51.5, longitude: -0.12, accuracy: 12, source: "gps", sourceLabel: "EXACT GPS", privacy: "public" } },
+  { id: "LF-B", type: "medical", urgency: "immediate", status: "verify", observations: ["injured"], summary: "Person injured", timestamp: 2000, location: { latitude: 51.51, longitude: -0.13, accuracy: 50, source: "gps", sourceLabel: "EXACT GPS", privacy: "public" } },
+  { id: "LF-C", type: "flooding", urgency: "monitor", status: "verified", observations: [], summary: "Minor flooding", timestamp: 3000, location: { latitude: 51.52, longitude: -0.11, accuracy: 120, source: "gps", sourceLabel: "EXACT GPS", privacy: "approximate" } },
+  { id: "LF-D", type: "road_hazard", urgency: "information", status: "resolved", observations: [], summary: "Road clear", timestamp: 4000, location: { source: "text", description: "near the market" } },
+  { id: "LF-E", type: "missing_person", urgency: "urgent", status: "verify", observations: [], summary: "Missing hiker", timestamp: 5000, location: { latitude: 51.5, longitude: -0.12, privacy: "private" } },
+];
+
+test("hasCoords rejects missing and out-of-range coordinates", () => {
+  const ok = { location: { latitude: 51.5, longitude: -0.12 } };
+  const missing = { location: { source: "text", description: "x" } };
+  const badRange = { location: { latitude: 999, longitude: -0.12 } };
+  assert.equal(hasCoords(ok), true);
+  assert.equal(hasCoords(missing), false);
+  assert.equal(hasCoords(badRange), false);
+  assert.equal(hasCoords({}), false);
+});
+
+test("resolveLocation enforces public/private privacy", () => {
+  const pub = resolveLocation(sampleIncidents[0], { coordinator: false });
+  assert.equal(pub.plottable, true);
+  assert.equal(pub.precise, true);
+  const priv = resolveLocation(sampleIncidents[4], { coordinator: false });
+  assert.equal(priv.plottable, false);
+  assert.equal(priv.precise, false);
+  const privCoord = resolveLocation(sampleIncidents[4], { coordinator: true });
+  assert.equal(privCoord.plottable, true);
+  assert.equal(privCoord.precise, true);
+});
+
+test("applyFilters filters by category, urgency, and status", () => {
+  const all = applyFilters(sampleIncidents, {});
+  assert.equal(all.length, 5);
+  const byType = applyFilters(sampleIncidents, { category: "medical" });
+  assert.equal(byType.length, 1);
+  assert.equal(byType[0].id, "LF-B");
+  const mixed = applyFilters(sampleIncidents, { urgency: "urgent", status: "verify" });
+  assert.ok(mixed.every((i) => i.urgency === "urgent" && i.status === "verify"));
+  assert.equal(mixed.length, 1);
+  const none = applyFilters(sampleIncidents, { status: "resolved" });
+  assert.equal(none.length, 1);
+});
+
+test("searchIncidents matches id, type, and summary text", () => {
+  assert.equal(searchIncidents(sampleIncidents, "LF-B").length, 1);
+  assert.equal(searchIncidents(sampleIncidents, "smoke").length, 1);
+  assert.equal(searchIncidents(sampleIncidents, "missing").length, 1);
+  assert.equal(searchIncidents(sampleIncidents, "nope").length, 0);
+  assert.equal(searchIncidents(sampleIncidents, "").length, 5);
+});
+
+test("statusSpec maps every incident status to a marker state", () => {
+  const ids = sampleIncidents.map((i) => statusSpec(i).label);
+  assert.ok(ids.includes("REPORTED"));
+  assert.ok(ids.includes("NEEDS VERIFICATION"));
+  assert.ok(ids.includes("VERIFIED"));
+  assert.ok(ids.includes("RESOLVED"));
+});
+
+test("statusSpec does not rely on color alone (icons present)", () => {
+  Object.values(STATUS_MARKERS).forEach((s) => {
+    assert.ok(s.icon, `marker ${s.label} missing icon`);
+    assert.ok(s.label, `marker missing label`);
+    assert.ok(s.badge, `marker ${s.label} missing badge`);
+  });
+});
+
+test("getDemoIncidents returns marked, coordinate-bearing, never-fabricated-user incidents", () => {
+  const demo = getDemoIncidents(1000000);
+  assert.ok(demo.length > 0);
+  assert.ok(demo.every((i) => i.isDemo === true));
+  assert.ok(demo.every((i) => hasCoords(i)));
+  assert.ok(demo.every((i) => i.location.privacy === "public"));
+  const ids = demo.map((i) => i.id);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("computeBounds returns south-west/north-east corners", () => {
+  const b = computeBounds(sampleIncidents);
+  assert.ok(b, "bounds should be non-null when coordinates exist");
+  assert.equal(b[0][0] <= b[1][0], true);
+  assert.equal(b[0][1] <= b[1][1], true);
+});
+
+test("computeBounds returns null when no plottable incidents", () => {
+  assert.equal(computeBounds([{ id: "x", location: { source: "text" } }]), null);
+});
+
+test("incidentDetailFields returns all required sections", () => {
+  const fields = incidentDetailFields(sampleIncidents[0]);
+  const labels = fields.map((f) => f.label);
+  for (const required of [
+    "INCIDENT ID", "WHAT HAPPENED", "CATEGORY", "URGENCY", "STATUS", "REPORTED",
+    "LOCATION", "ACCURACY", "SOURCE", "AI/FALLBACK ANALYSIS", "RECOMMENDED RESPONSE",
+    "LOCATION LINK", "ATTACHMENTS", "AUDIT HISTORY",
+  ]) {
+    assert.ok(labels.includes(required), `missing field: ${required}`);
+  }
+});
+
+test("incidentDetailFields emits a Google Maps link only with coordinates", () => {
+  const withCoords = incidentDetailFields(sampleIncidents[0]).find((f) => f.label === "LOCATION LINK");
+  assert.ok(withCoords.link);
+  assert.equal(withCoords.value.includes("https://www.google.com/maps?q="), true);
+  const noCoords = incidentDetailFields(sampleIncidents[3]).find((f) => f.label === "LOCATION LINK");
+  assert.equal(noCoords.link, false);
+});
+
+test("createLocationLink never fabricates and always uses Google Maps format", () => {
+  const link = createLocationLink(51.5, -0.12);
+  assert.equal(link, "https://www.google.com/maps?q=51.5,-0.12");
+  const link2 = createLocationLink(0, 0);
+  assert.equal(link2, "https://www.google.com/maps?q=0,0");
+});
+
+test("resolveLocationState covers all required permission states", () => {
+  assert.equal(resolveLocationState({ online: false }).state, LOCATION_STATES.OFFLINE);
+  assert.equal(resolveLocationState({ online: true, geoSupported: false }).state, LOCATION_STATES.UNAVAILABLE);
+  assert.equal(resolveLocationState({ online: true, geoSupported: true, permission: "denied" }).state, LOCATION_STATES.DENIED);
+  assert.equal(resolveLocationState({ online: true, geoSupported: true, permission: "granted", accuracy: 20 }).state, LOCATION_STATES.AVAILABLE);
+  assert.equal(resolveLocationState({ online: true, geoSupported: true, permission: "granted", accuracy: 250 }).state, LOCATION_STATES.LOW_ACCURACY);
+  assert.equal(resolveLocationState({ online: true, geoSupported: true, permission: "granted", accuracy: null }).state, LOCATION_STATES.NO_LOCATION);
+  assert.equal(
+    resolveLocationState({ online: true, geoSupported: true, permission: "granted", error: { code: 2 } }).state,
+    LOCATION_STATES.UNAVAILABLE
+  );
+  assert.equal(
+    resolveLocationState({ online: true, geoSupported: true, permission: "granted", error: { code: 1 } }).state,
+    LOCATION_STATES.DENIED
+  );
+});
+
+test("resolveLocationState has a message for every state", () => {
+  const cases = [
+    { online: false },
+    { online: true, geoSupported: false },
+    { online: true, geoSupported: true, permission: "denied" },
+    { online: true, geoSupported: true, permission: "granted", accuracy: 20 },
+    { online: true, geoSupported: true, permission: "granted", accuracy: 250 },
+    { online: true, geoSupported: true, permission: "granted", error: { code: 2 } },
+  ];
+  cases.forEach((c) => {
+    const r = resolveLocationState(c);
+    assert.ok(r.message && r.message.length > 0, `missing message for ${r.state}`);
+  });
+});
+
+test("URGENCY_COLORS covers every urgency level", () => {
+  URGENCY_LEVELS.forEach((u) => assert.ok(URGENCY_COLORS[u], `missing color for ${u}`));
 });
