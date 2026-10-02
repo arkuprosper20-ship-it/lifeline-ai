@@ -14,7 +14,7 @@ const INCIDENT_KEYWORDS = {
   unknown: [],
 };
 
-const URGENT_KEYWORDS = ["urgent", "emergency", "asap", "danger", "life threatening", "life-threatening"];
+const URGENT_KEYWORDS = ["urgent", "emergency", "asap", "danger", "life threatening", "life-threatening", "heavy smoke", "heavy fire"];
 const IMMEDIATE_KEYWORDS = ["immediate", "right now", "trapped", "stuck", "fallen", "collapse"];
 const VERIFY_KEYWORDS = ["maybe", "possibly", "might", "could", "possible", "sounds like", "report of", "appears", "looks like", "seems like"];
 const MONITOR_KEYWORDS = ["concerned", "worried", "keep an eye", "watch", "monitor", "check", "reported earlier"];

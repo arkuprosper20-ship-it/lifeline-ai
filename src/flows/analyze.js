@@ -1,6 +1,6 @@
 // LIFELINE AI — Analysis flow (AI router + rules engine)
 import { getState, store } from "../store.js";
-import { localAnalysis } from "../analyzer.js";
+import { localAnalysis, detectSafetyOverride } from "../analyzer.js";
 import { createIncidentId, INCIDENT_STATUS_LABELS } from "../types.js";
 import { showToast } from "../ui.js";
 
@@ -16,12 +16,21 @@ export async function startAnalysisFlow() {
   state.ui.analysisResult = null;
   store.setUI({ isAnalyzing: true, reportText });
   state.ui.params = {};
-  const hash = location.hash;
   history.replaceState(null, "", "#analysis");
   setTimeout(() => { location.dispatchEvent(new HashChangeEvent("hashchange")); }, 100);
 
   try {
     const analysis = await runAnalysis(reportText, state.ui.imagePreview);
+    
+    // Apply deterministic safety override
+    const safetyOverride = detectSafetyOverride(analysis.urgency, analysis.type, analysis.observations);
+    const finalUrgency = safetyOverride !== analysis.urgency ? safetyOverride : analysis.urgency;
+    if (finalUrgency !== analysis.urgency) {
+      analysis.urgency = finalUrgency;
+      analysis.safetyOverride = true;
+      analysis.originalUrgency = safetyOverride === analysis.urgency ? analysis.urgency : analysis.urgency;
+    }
+    
     state.ui.analysisResult = analysis;
     state.ui.isAnalyzing = false;
 
@@ -29,9 +38,9 @@ export async function startAnalysisFlow() {
       id: createIncidentId(),
       type: analysis.type,
       typeLabel: analysis.typeLabel,
-      urgency: analysis.urgency,
+      urgency: finalUrgency,
       status: "reported",
-      observations: analysis.observations.map(o => o.label),
+      observations: analysis.observations.map(o => typeof o === "string" ? o : o.label),
       missingInfo: analysis.missingInfo,
       summary: analysis.summary,
       location: state.ui.location || null,
@@ -40,7 +49,8 @@ export async function startAnalysisFlow() {
       model: analysis.model,
       confidence: analysis.confidence,
       aiClassification: analysis.summary,
-      source: analysis.source,
+      source: analysis.provider === "groq" ? "ai" : "local",
+      safetyOverrideApplied: analysis.urgency !== finalUrgency,
       synced: false,
       isDemo: state.demoMode,
     };
@@ -70,9 +80,9 @@ export async function startAnalysisFlow() {
       id: createIncidentId(),
       type: local.type,
       typeLabel: local.typeLabel,
-      urgency: local.urgency,
+      urgency: detectSafetyOverride(local.urgency, local.type, local.observations),
       status: "reported",
-      observations: local.observations,
+      observations: local.observations.map(o => typeof o === "string" ? o : o.label),
       missingInfo: local.missingInfo,
       summary: local.summary,
       location: state.ui.location || null,
