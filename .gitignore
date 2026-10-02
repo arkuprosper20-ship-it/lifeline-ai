@@ -1,9 +1,7 @@
-# LIFELINE AI
-# Sensitive configuration — never commit
 .env
 node_modules/
-dist/
+.tmp/
+.allai/
 *.log
-.vercel/
-
-.vercel
+.DS_Store
+Thumbs.db
