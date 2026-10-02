@@ -4,6 +4,78 @@ import { localAnalysis, detectSafetyOverride } from "../analyzer.js";
 import { createIncidentId, INCIDENT_STATUS_LABELS } from "../types.js";
 import { showToast } from "../ui.js";
 
+function render() {
+  const app = document.getElementById("app");
+  if (!app) return;
+  const { routes, viewSetups, getCurrentView, parseHashParams, initSidebar, initMobileNav, setupMap } = window;
+  const view = getCurrentView();
+  const hashParams = parseHashParams();
+  const params = { ...getState().ui.params, ...hashParams };
+  const component = routes[view];
+  if (!component) {
+    app.innerHTML = "<div class='card'><p>View not found.</p></div>";
+    return;
+  }
+  const html = component(params);
+  app.innerHTML = "";
+  if (typeof html === "string") {
+    app.innerHTML = html;
+  }
+  initSidebar();
+  initMobileNav();
+  setTimeout(() => {
+    if (viewSetups[view]) viewSetups[view]();
+    if (view === "map") setupMap();
+    if (view === "coordination") setupMap("dashboard-map", { isDashboard: true });
+  }, 50);
+}
+
+function finalizeIncident(analysis, finalUrgency, provider, model, hasImage, enhanced) {
+  const state = getState();
+  const safetyOverride = provider !== "rules" || enhanced;
+
+  state.ui.analysisResult = { ...analysis, provider, model, urgency: finalUrgency, safetyOverride };
+  state.ui.isAnalyzing = false;
+
+  const incident = {
+    id: createIncidentId(),
+    type: analysis.type,
+    typeLabel: analysis.typeLabel,
+    urgency: finalUrgency,
+    status: "reported",
+    observations: (analysis.observations || []).map(o => typeof o === "string" ? o : o.label),
+    missingInfo: analysis.missingInfo || [],
+    summary: analysis.summary || "",
+    location: state.ui.location || null,
+    timestamp: Date.now(),
+    provider,
+    model,
+    confidence: analysis.confidence || 0,
+    aiClassification: analysis.summary || "",
+    source: provider === "groq" ? "ai" : "local",
+    safetyOverrideApplied: safetyOverride,
+    hasImage,
+    enhanced,
+    synced: false,
+    isDemo: state.demoMode,
+  };
+
+  store.addIncident(incident);
+  store.setUI({
+    isAnalyzing: false,
+    analysisResult: { ...analysis, provider, model, urgency: finalUrgency },
+    selectedIncident: incident,
+    reportText: "",
+    imagePreview: hasImage ? state.ui.imagePreview : null,
+    voiceText: state.ui.voiceText,
+  });
+  state.ui.selectedIncident = incident;
+
+  history.replaceState(null, "", "#brief");
+  setTimeout(() => { location.dispatchEvent(new HashChangeEvent("hashchange")); }, 50);
+  showToast(enhanced ? "AI analysis complete. Incident brief generated." : "Analysis complete. Incident brief generated.");
+}
+
 export async function startAnalysisFlow() {
   const state = getState();
   const reportText = state.ui.reportText || "";
@@ -20,114 +92,42 @@ export async function startAnalysisFlow() {
   setTimeout(() => { location.dispatchEvent(new HashChangeEvent("hashchange")); }, 100);
 
   try {
-    const analysis = await runAnalysis(reportText, state.ui.imagePreview);
-    
-    // Apply deterministic safety override
-    const safetyOverride = detectSafetyOverride(analysis.urgency, analysis.type, analysis.observations);
-    const finalUrgency = safetyOverride !== analysis.urgency ? safetyOverride : analysis.urgency;
-    if (finalUrgency !== analysis.urgency) {
-      analysis.urgency = finalUrgency;
-      analysis.safetyOverride = true;
-      analysis.originalUrgency = safetyOverride === analysis.urgency ? analysis.urgency : analysis.urgency;
-    }
-    
-    state.ui.analysisResult = analysis;
-    state.ui.isAnalyzing = false;
+    const mode = state.settings.mode;
+    const apiKey = state.settings.groqApiKey;
+    const useAI = (mode === "groq" || mode === "automatic") && apiKey && navigator.onLine;
 
-    const incident = {
-      id: createIncidentId(),
-      type: analysis.type,
-      typeLabel: analysis.typeLabel,
-      urgency: finalUrgency,
-      status: "reported",
-      observations: analysis.observations.map(o => typeof o === "string" ? o : o.label),
-      missingInfo: analysis.missingInfo,
-      summary: analysis.summary,
-      location: state.ui.location || null,
-      timestamp: Date.now(),
-      provider: analysis.provider,
-      model: analysis.model,
-      confidence: analysis.confidence,
-      aiClassification: analysis.summary,
-      source: analysis.provider === "groq" ? "ai" : "local",
-      safetyOverrideApplied: analysis.urgency !== finalUrgency,
-      synced: false,
-      isDemo: state.demoMode,
-    };
-
-    store.addIncident(incident);
-    store.setUI({
-      isAnalyzing: false,
-      analysisResult: analysis,
-      selectedIncident: incident,
-      reportText: "",
-      imagePreview: null,
-      voiceText: null,
-    });
-    state.ui.selectedIncident = incident;
-    state.ui.analysisResult = analysis;
-
-    history.replaceState(null, "", "#brief");
-    setTimeout(() => { location.dispatchEvent(new HashChangeEvent("hashchange")); }, 100);
-    showToast("Analysis complete. Incident brief generated.");
-  } catch (error) {
-    state.ui.isAnalyzing = false;
-    store.setUI({ isAnalyzing: false });
-    console.error("Analysis failed:", error);
-    showToast("Analysis failed. Showing local analysis result.");
+    // Always run local analysis first for instant feedback
     const local = localAnalysis(reportText);
-    const incident = {
-      id: createIncidentId(),
-      type: local.type,
-      typeLabel: local.typeLabel,
-      urgency: detectSafetyOverride(local.urgency, local.type, local.observations),
-      status: "reported",
-      observations: local.observations.map(o => typeof o === "string" ? o : o.label),
-      missingInfo: local.missingInfo,
-      summary: local.summary,
-      location: state.ui.location || null,
-      timestamp: Date.now(),
-      provider: "rules",
-      model: null,
-      confidence: local.confidence,
-      aiClassification: local.summary,
-      source: "local",
-      synced: false,
-    };
-    store.addIncident(incident);
-    state.ui.selectedIncident = incident;
-    state.ui.analysisResult = { ...local, provider: "rules", model: null };
-    history.replaceState(null, "", "#brief");
-    setTimeout(() => { location.dispatchEvent(new HashChangeEvent("hashchange")); }, 100);
-  }
-}
+    const safetyOverride = detectSafetyOverride(local.urgency, local.type, local.observations);
+    const finalUrgency = safetyOverride !== local.urgency ? safetyOverride : local.urgency;
 
-async function runAnalysis(text, imageDataUrl) {
-  const state = getState();
-  const mode = state.settings.mode;
-  const apiKey = state.settings.groqApiKey;
-
-  if (mode === "rules") {
-    const local = localAnalysis(text);
-    return { ...local, provider: "rules", model: null };
-  }
-
-  if (mode === "groq" || mode === "automatic") {
-    if (apiKey && navigator.onLine) {
-      try {
-        const { getAIAnalysis } = await import("../analyzer.js");
-        const result = await getAIAnalysis(text, imageDataUrl, { apiKey, fetchImpl: fetch, signal: AbortSignal.timeout(30000) });
-        return result;
-      } catch (error) {
-        console.warn("Groq analysis failed, falling back to local:", error.message);
-        const local = localAnalysis(text);
-        return { ...local, provider: "rules", model: null, fallbackFrom: "groq" };
-      }
+    // Show local result immediately if AI is not needed or not available
+    if (!useAI) {
+      state.ui.analysisResult = { ...local, provider: "rules", model: null };
+      finalizeIncident(local, finalUrgency, "rules", null, !!state.ui.imagePreview, false);
+      return;
     }
-    const local = localAnalysis(text);
-    return { ...local, provider: "rules", model: null };
-  }
 
-  const local = localAnalysis(text);
-  return { ...local, provider: "rules", model: null };
+    // AI mode: show local result first, then enhance
+    state.ui.analysisResult = { ...local, provider: "rules", model: null, fallbackFrom: "ai" };
+    store.setUI({ isAnalyzing: true, analysisResult: state.ui.analysisResult });
+    setTimeout(render, 50);
+
+    try {
+      const { getAIAnalysis } = await import("../analyzer.js");
+      const result = await getAIAnalysis(reportText, state.ui.imagePreview, { apiKey, fetchImpl: fetch, signal: AbortSignal.timeout(15000) });
+      const aiUrgency = result.urgency || local.urgency;
+      const aiOverride = detectSafetyOverride(aiUrgency, result.type, result.observations || []);
+      const finalAIUrgency = aiOverride !== aiUrgency ? aiOverride : aiUrgency;
+      finalizeIncident(result, finalAIUrgency, "groq", result.model || "llama-3.3-70b-versatile", !!state.ui.imagePreview, true);
+    } catch (error) {
+      console.warn("Groq analysis failed, using local result:", error.message);
+      finalizeIncident({ ...state.ui.analysisResult, provider: "rules", model: null }, finalUrgency, "rules", null, !!state.ui.imagePreview, false);
+    }
+  } catch (error) {
+    // Fallback to pure local on unexpected error
+    const local = localAnalysis(reportText);
+    const safetyOverride = detectSafetyOverride(local.urgency, local.type, local.observations || []);
+    finalizeIncident(local, safetyOverride !== local.urgency ? safetyOverride : local.urgency, "rules", null, !!state.ui.imagePreview, false);
+  }
 }

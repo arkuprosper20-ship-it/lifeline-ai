@@ -29,6 +29,12 @@ export function initSettingsScreen() {
           </select>
         </label>
 
+        <label style="margin-top:12px; display:block; font-size:13px;">
+          Groq API Key
+          <input type="password" id="groq-api-key" placeholder="sk-..." value="${state.settings.groqApiKey ? '••••••••' : ''}" style="margin-top:6px; width:100%; padding:8px; border-radius:8px; background:var(--bg-primary); border:1px solid var(--border); color:var(--text-primary);" autocomplete="off" />
+        </label>
+        <p class="mu text-small" style="margin-top:4px;">Your key is stored locally in your browser only. Leave blank to use local rules engine.</p>
+
         <label style="margin-top:12px; display:flex; align-items:center; gap:8px;">
           <input type="checkbox" id="allow-groq-fallback" ${state.settings.allowGroqFallback ? "checked" : ""} />
           Allow Groq as automatic fallback
@@ -107,6 +113,9 @@ export function setupSettingsHandlers() {
   });
   document.getElementById("allow-groq-fallback")?.addEventListener("change", (e) => {
     store.setSettings({ allowGroqFallback: e.target.checked });
+  });
+  document.getElementById("groq-api-key")?.addEventListener("change", (e) => {
+    store.setSettings({ groqApiKey: e.target.value.trim() || null });
   });
   document.getElementById("location-mode")?.addEventListener("change", (e) => {
     store.setSettings({ locationDefault: e.target.value });
