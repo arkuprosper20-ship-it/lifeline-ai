@@ -26,5 +26,6 @@
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "src": "/(.*\\..+)", "dest": "/$1" },
     { "src": "/(.*)", "dest": "/index.html", "status": 200 }
-  ]
+  ],
+  "cacheBust": "2026-10-06-fix-unicode"
 }
