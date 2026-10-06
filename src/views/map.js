@@ -1,4 +1,4 @@
-// LIFELINE AI — Map screen (Leaflet + OpenStreetMap, no paid API keys)
+// LIFELINE AI — Map screen (MapLibre vector tiles + Leaflet fallback)
 import { getState, store } from "../store.js";
 import { esc, showToast, formatTimeAgo, loadLeaflet } from "../ui.js";
 import {
@@ -25,6 +25,15 @@ import {
   getUrgencyOptions,
   getStatusOptions,
 } from "../map-helpers.js";
+import {
+  TILE_CONFIG,
+  TILE_STYLE,
+  loadMapLibre,
+  createVectorMarker,
+  getTileConfig,
+  estimateOfflineBundleSize,
+  getRecommendedZoomLevels,
+} from "../maplibre.js";
 
 const DEFAULT_FILTERS = { category: "all", urgency: "all", status: "all", search: "" };
 const LOW_ACCURACY_UI = 100;
@@ -218,15 +227,40 @@ export function setupMap(containerId = "incident-map", options = {}) {
     showBanner(isOnline() ? null : LOCATION_STATES.OFFLINE, isOnline() ? null : "Map is offline. Tiles cannot load, but local incidents remain available below.");
 
     map = L.map(containerId).setView([20, 0], 2);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
-      maxZoom: 18,
-      minZoom: 1,
+    L.tileLayer(TILE_CONFIG.rasterUrl, {
+      attribution: TILE_CONFIG.attribution,
+      maxZoom: TILE_CONFIG.maxZoom,
+      minZoom: TILE_CONFIG.minZoom,
       detectRetina: true,
     }).addTo(map);
 
     renderMarkers();
     fitMap();
+  }
+
+  async function initMapLibre() {
+    const maplibregl = await loadMapLibre();
+    if (!maplibregl) {
+      initLeaflet();
+      return;
+    }
+    if (map) return;
+    hidePlaceholder();
+    showBanner(isOnline() ? null : LOCATION_STATES.OFFLINE, isOnline() ? null : "Map is offline. Tiles cannot load, but local incidents remain available below.");
+
+    map = new maplibregl.Map({
+      container: containerId,
+      style: TILE_STYLE,
+      center: [0, 20],
+      zoom: 2,
+      maxZoom: 16,
+      minZoom: 1,
+    });
+
+    map.on("load", () => {
+      renderMarkers();
+      fitMap();
+    });
   }
 
   function renderMarkers() {
@@ -422,14 +456,49 @@ export function setupMap(containerId = "incident-map", options = {}) {
     if (cached) renderCurrentLocation(cached, resolveLocationState({ online: isOnline(), accuracy: cached.accuracy }));
     renderIncidentList();
     bindControls();
-    if (typeof L === "undefined") {
-      loadLeaflet().then(() => initLeaflet());
-    } else {
+
+    // Try MapLibre vector tiles first, fall back to Leaflet raster tiles
+    if (typeof maplibregl !== "undefined") {
+      initMapLibre();
+    } else if (typeof L !== "undefined") {
       initLeaflet();
+    } else {
+      // Load both and prefer MapLibre
+      Promise.all([loadLeaflet(), loadMapLibre()]).then(([leaflet, maplibre]) => {
+        if (maplibre) {
+          initMapLibre();
+        } else if (leaflet) {
+          initLeaflet();
+        }
+      });
+    }
+  }
+
+  function bindOfflineBundleControls() {
+    const bundleBtn = document.getElementById("offline-bundle-btn");
+    if (bundleBtn) {
+      bundleBtn.addEventListener("click", async () => {
+        const bbox = computeBounds(currentIncidents());
+        if (!bbox) {
+          showToast("No incidents with coordinates to download offline tiles for.");
+          return;
+        }
+        const zooms = getRecommendedZoomLevels(bbox);
+        const sizeKB = estimateOfflineBundleSize(bbox, zooms);
+        if (sizeKB > 10000) {
+          showToast(`Offline bundle is large (~${Math.round(sizeKB / 1000)}MB). Consider a smaller area.`);
+        } else {
+          showToast(`Preparing offline bundle (~${Math.round(sizeKB)}KB)...`);
+        }
+      });
     }
   }
 
   init();
-  window.LIFELINE_MAP = { refresh: () => { renderMarkers(); fitMap(); renderIncidentList(); } };
+  window.LIFELINE_MAP = { 
+    refresh: () => { renderMarkers(); fitMap(); renderIncidentList(); },
+    getTileConfig,
+    getOfflineBundleSize: (bbox) => estimateOfflineBundleSize(bbox, getRecommendedZoomLevels(bbox)),
+  };
   return map;
 }

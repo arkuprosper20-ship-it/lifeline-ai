@@ -1,9 +1,11 @@
 // LIFELINE AI — Settings screen
-import { getState, store } from "../store.js";
+import { getState, store, isDBAvailable } from "../store.js";
 import { saveContacts } from "../contacts.js";
 import { getEnabledContacts, resetToDefaultContacts } from "../contacts.js";
-import { esc } from "../ui.js";
+import { esc, showToast } from "../ui.js";
 import { fetchProviderConfig } from "../notification-providers.js";
+import { getLanguage, setLanguage, getAvailableLanguages } from "../i18n.js";
+import { checkAllIncidentsSLA, getSLAStats } from "../sla.js";
 
 export function initSettingsScreen() {
   const state = getState();
@@ -107,7 +109,36 @@ export function initSettingsScreen() {
       </div>
 
       <div class="card">
+        <h3>Language / Idioma / Langue</h3>
+        <label for="language-select" style="display:block; font-size:13px; margin-bottom:6px;">
+          Select your preferred language
+        </label>
+        <select id="language-select" style="margin-top:6px; width:100%; padding:8px; border-radius:8px; background:var(--bg-primary); border:1px solid var(--border); color:var(--text-primary);">
+          ${getAvailableLanguages().map((lang) => `<option value="${lang.code}" ${lang.code === getLanguage() ? "selected" : ""}>${lang.flag} ${lang.name}</option>`).join("")}
+        </select>
+      </div>
+
+      <div class="card">
+        <h3>SLA / Response Tracking</h3>
+        <p class="mu" style="margin-bottom:8px;">
+          ${(() => {
+            const stats = getSLAStats(state.incidents);
+            const totalActive = stats.total;
+            const breached = stats.breached;
+            const warning = stats.warning;
+            return `Active incidents: ${totalActive} · ${breached > 0 ? `⚠ ${breached} breached SLA` : warning > 0 ? `⚠ ${warning} approaching SLA` : "All within SLA"}`;
+          })()}
+        </p>
+        <button type="button" class="btn btn-secondary btn-sm" id="view-sla-report">
+          View SLA report →
+        </button>
+      </div>
+
+      <div class="card">
         <h3>Offline storage</h3>
+        <p class="mu">
+          Storage: ${isDBAvailable() ? "IndexedDB (enhanced)" : "localStorage (standard)"}
+        </p>
         <p class="mu">
           ${state.syncQueue?.length || 0} report(s) waiting to sync.
           ${state.isOnline ? '● Ready to sync' : '○ Offline'}
@@ -160,12 +191,34 @@ export function setupSettingsHandlers() {
   };
   document.getElementById("refresh-notifications")?.addEventListener("click", refreshConfig);
 
-  document.getElementById("demo-mode-toggle")?.addEventListener("change", (e) => {
+document.getElementById("demo-mode-toggle")?.addEventListener("change", (e) => {
     store.setSettings({ demoMode: e.target.checked });
+  });
+  document.getElementById("language-select")?.addEventListener("change", (e) => {
+    setLanguage(e.target.value);
+    store.setSettings({ language: e.target.value });
+    showToast("Language updated. Some changes may require a refresh.");
+  });
+  document.getElementById("view-sla-report")?.addEventListener("click", () => {
+    const { generateBatchReport, downloadReport } = window.LIFELINE_REPORTS || {};
+    if (!generateBatchReport || !downloadReport) {
+      showToast("Report module not available");
+      return;
+    }
+    const activeIncidents = state.incidents.filter(
+      (i) => i.status === "reported" || i.status === "active" || i.status === "verify"
+    );
+    const report = generateBatchReport(activeIncidents, { format: "markdown" });
+    downloadReport(JSON.stringify(report, null, 2), "sla-report.json", "application/json");
   });
   document.getElementById("clear-storage")?.addEventListener("click", () => {
     if (confirm("Clear all local data? This cannot be undone.")) {
       localStorage.clear();
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((reg) => reg.unregister());
+        });
+      }
       location.reload();
     }
   });

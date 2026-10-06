@@ -11,6 +11,8 @@ import {
   hasCoords, resolveLocation, isLocationPlottable, applyFilters, searchIncidents, getDemoIncidents,
   computeBounds, incidentDetailFields, statusSpec, getIncidentType, STATUS_MARKERS, URGENCY_COLORS,
 } from "../src/map-helpers.js";
+import { checkSLA, checkAllIncidentsSLA, getSLAStats, getSLAColor, getSLAProgress, formatElapsed, formatRemaining } from "../src/sla.js";
+import { generateAfterActionReport, generateBatchReport, generateCsvReport } from "../src/reports.js";
 
 test("classifyIncidentType detects fire/smoke", () => {
   assert.equal(classifyIncidentType("Heavy smoke coming from a building"), "fire_smoke");
@@ -488,4 +490,225 @@ test("resolveLocationState has a message for every state", () => {
 
 test("URGENCY_COLORS covers every urgency level", () => {
   URGENCY_LEVELS.forEach((u) => assert.ok(URGENCY_COLORS[u], `missing color for ${u}`));
+});
+
+// --- SLA Tests ---
+test("checkSLA returns correct status for fresh incident", () => {
+  const incident = {
+    id: "LF-SLA-001",
+    urgency: "immediate",
+    timestamp: Date.now() - 1000,
+    status: "active",
+  };
+  const sla = checkSLA(incident);
+  assert.ok(sla);
+  assert.equal(sla.status, "ok");
+  assert.equal(sla.level, "normal");
+});
+
+test("checkSLA flags warning for urgent incident past warning threshold", () => {
+  const incident = {
+    id: "LF-SLA-002",
+    urgency: "urgent",
+    timestamp: Date.now() - 6 * 60 * 1000,
+    status: "active",
+  };
+  const sla = checkSLA(incident);
+  assert.equal(sla.status, "warning");
+  assert.equal(sla.level, "caution");
+});
+
+test("checkSLA flags escalation for urgent incident past escalation threshold", () => {
+  const incident = {
+    id: "LF-SLA-003",
+    urgency: "urgent",
+    timestamp: Date.now() - 12 * 60 * 1000,
+    status: "active",
+  };
+  const sla = checkSLA(incident);
+  assert.equal(sla.status, "escalated");
+  assert.equal(sla.level, "warning");
+});
+
+test("checkSLA flags breach for urgent incident past max threshold", () => {
+  const incident = {
+    id: "LF-SLA-004",
+    urgency: "urgent",
+    timestamp: Date.now() - 35 * 60 * 1000,
+    status: "active",
+  };
+  const sla = checkSLA(incident);
+  assert.equal(sla.status, "breached");
+  assert.equal(sla.level, "critical");
+});
+
+test("checkSLA returns null for incident without timestamp", () => {
+  const incident = {
+    id: "LF-SLA-005",
+    urgency: "urgent",
+    status: "active",
+  };
+  const sla = checkSLA(incident);
+  assert.equal(sla, null);
+});
+
+test("checkAllIncidentsSLA filters non-active incidents", () => {
+  const incidents = [
+    { id: "LF-A", urgency: "urgent", status: "resolved", timestamp: Date.now() - 1000 },
+    { id: "LF-B", urgency: "urgent", status: "active", timestamp: Date.now() - 1000 },
+    { id: "LF-C", urgency: "immediate", status: "verify", timestamp: Date.now() - 1000 },
+  ];
+  const results = checkAllIncidentsSLA(incidents);
+  assert.equal(results.length, 2);
+  assert.ok(results.some((r) => r.incidentId === "LF-B"));
+  assert.ok(results.some((r) => r.incidentId === "LF-C"));
+});
+
+test("getSLAStats returns correct counts", () => {
+  const incidents = [
+    { id: "A", urgency: "urgent", status: "active", timestamp: Date.now() - 1000 },
+    { id: "B", urgency: "immediate", status: "active", timestamp: Date.now() - 1000 },
+    { id: "C", urgency: "monitor", status: "resolved", timestamp: Date.now() - 1000 },
+  ];
+  const stats = getSLAStats(incidents);
+  assert.equal(stats.total, 2);
+  assert.equal(stats.ok, 2);
+  assert.equal(stats.breached, 0);
+});
+
+test("formatElapsed formats correctly", () => {
+  assert.equal(formatElapsed(30000), "30s");
+  assert.equal(formatElapsed(120000), "2m 0s");
+  assert.equal(formatElapsed(3600000), "1h 0m");
+});
+
+test("formatRemaining formats correctly", () => {
+  assert.equal(formatRemaining(0), "0s");
+  assert.equal(formatRemaining(30000), "30s");
+  assert.equal(formatRemaining(120000), "2m 0s");
+});
+
+test("getSLAColor returns appropriate colors", () => {
+  const incident = { id: "LF-SLA-001", urgency: "immediate", timestamp: Date.now() - 1000, status: "active" };
+  assert.equal(getSLAColor(incident), "badge-ready");
+});
+
+test("getSLAProgress calculates percentage", () => {
+  const incident = {
+    urgency: "urgent",
+    timestamp: Date.now() - 15 * 60 * 1000,
+    status: "active",
+  };
+  const progress = getSLAProgress(incident);
+  assert.ok(progress.percent > 0);
+  assert.ok(progress.percent < 100);
+  assert.ok(progress.color);
+});
+
+// --- Report Generation Tests ---
+test("generateAfterActionReport creates a valid report", () => {
+  const incident = {
+    id: "LF-TEST-001",
+    type: "fire_smoke",
+    typeLabel: "Fire / Smoke",
+    urgency: "urgent",
+    status: "reported",
+    observations: ["Smoke visible", "Building on fire"],
+    missingInfo: ["Exact location", "Number of people affected"],
+    summary: "Fire/smoke incident reported.",
+    location: { latitude: 5.6037, longitude: -0.187, accuracy: 18, timestamp: Date.now(), source: "gps", sourceLabel: "EXACT GPS" },
+    timestamp: Date.now(),
+    provider: "rules",
+    confidence: 0.6,
+    safetyOverrideApplied: true,
+    source: "local",
+  };
+  const report = generateAfterActionReport(incident, { format: "json" });
+  assert.ok(report.reportId);
+  assert.equal(report.incidentId, "LF-TEST-001");
+  assert.equal(report.type, "fire_smoke");
+  assert.ok(report.timeline.length > 0);
+  assert.ok(report.lessons.length > 0);
+  assert.ok(Array.isArray(report.recommendations));
+});
+
+test("generateAfterActionReport identifies missing info lesson", () => {
+  const incident = {
+    id: "LF-TEST-002",
+    type: "flooding",
+    typeLabel: "Flooding",
+    urgency: "monitor",
+    status: "reported",
+    observations: ["Water visible"],
+    missingInfo: ["Exact location", "Time of occurrence"],
+    summary: "Flooding incident.",
+    location: null,
+    timestamp: Date.now(),
+    provider: "rules",
+    confidence: 0.5,
+    safetyOverrideApplied: false,
+    source: "local",
+  };
+  const report = generateAfterActionReport(incident, { format: "json" });
+  const missingInfoLesson = report.lessons.find((l) => l.category === "incomplete_information");
+  assert.ok(missingInfoLesson);
+  assert.ok(missingInfoLesson.finding.includes("Exact location"));
+});
+
+test("generateAfterActionReport identifies safety override lesson", () => {
+  const incident = {
+    id: "LF-TEST-003",
+    type: "fire_smoke",
+    typeLabel: "Fire / Smoke",
+    urgency: "urgent",
+    status: "reported",
+    observations: ["Smoke visible"],
+    missingInfo: [],
+    summary: "Smoke incident.",
+    location: { latitude: 5.6, longitude: -0.18, timestamp: Date.now(), source: "gps" },
+    timestamp: Date.now(),
+    provider: "rules",
+    confidence: 0.6,
+    safetyOverrideApplied: true,
+    source: "local",
+  };
+  const report = generateAfterActionReport(incident, { format: "json" });
+  const safetyLesson = report.lessons.find((l) => l.category === "safety_override");
+  assert.ok(safetyLesson);
+});
+
+test("generateBatchReport aggregates incidents correctly", () => {
+  const incidents = [
+    { id: "LF-001", type: "fire_smoke", typeLabel: "Fire / Smoke", urgency: "urgent", status: "resolved", timestamp: Date.now() - 3600000, lastEscalation: { at: Date.now() - 3500000, status: "SENT", delivered: true }, observations: [], missingInfo: [] },
+    { id: "LF-002", type: "medical", typeLabel: "Medical concern", urgency: "immediate", status: "active", timestamp: Date.now() - 600000, observations: [], missingInfo: [] },
+  ];
+  const report = generateBatchReport(incidents, { format: "json" });
+  assert.equal(report.totalIncidents, 2);
+  assert.ok(report.byType.fire_smoke);
+  assert.ok(report.byUrgency.urgent);
+  assert.ok(report.averageResponseTime >= 0);
+  assert.equal(report.resolutionRate, 50);
+});
+
+test("generateCsvReport generates valid CSV", () => {
+  const incidents = [
+    { id: "LF-001", type: "fire_smoke", typeLabel: "Fire / Smoke", urgency: "urgent", status: "resolved", timestamp: Date.now(), observations: ["Smoke visible"], missingInfo: [], location: { latitude: 5.6, longitude: -0.18 }, lastEscalation: { delivered: true } },
+  ];
+  const csv = generateCsvReport(incidents);
+  assert.ok(csv.includes("ID,Type,Urgency,Status,Reported"));
+  assert.ok(csv.includes("LF-001"));
+  assert.ok(csv.includes("Fire / Smoke"));
+});
+
+// --- Map Helpers Tests ---
+test("STATUS_MARKERS has entries for all incident statuses", () => {
+  INCIDENT_STATUS.forEach((s) => {
+    assert.ok(STATUS_MARKERS[s], `missing marker for status: ${s}`);
+  });
+});
+
+test("URGENCY_COLORS has entries for all urgency levels", () => {
+  URGENCY_LEVELS.forEach((u) => {
+    assert.ok(URGENCY_COLORS[u], `missing color for urgency: ${u}`);
+  });
 });

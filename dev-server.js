@@ -9,6 +9,8 @@ const path = require("path");
 const PORT = process.env.PORT || 8080;
 const ROOT = path.resolve(__dirname);
 const API_NOTIFY = require(path.join(ROOT, "api", "notify.js"));
+const API_TWILIO_WEBHOOK = require(path.join(ROOT, "api", "twilio-webhook.js"));
+const API_MESSAGE_STATUS = require(path.join(ROOT, "api", "message-status.js"));
 
 loadDotEnv(path.join(ROOT, ".env"));
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
@@ -68,6 +70,14 @@ const server = http.createServer((req, res) => {
     API_NOTIFY(req, res);
     return;
   }
+  if (pathname === "/api/twilio-webhook" || pathname.startsWith("/api/twilio-webhook/")) {
+    API_TWILIO_WEBHOOK(req, res);
+    return;
+  }
+  if (pathname === "/api/message-status" || pathname.startsWith("/api/message-status/")) {
+    API_MESSAGE_STATUS(req, res);
+    return;
+  }
 
   // Route SPA: landing at root, all other unknown paths -> index.html
   let file = pathname === "/" ? "/index.html" : pathname;
@@ -111,5 +121,7 @@ server.listen(PORT, () => {
   console.log(" LIFELINE AI dev server");
   console.log("   Local:  http://localhost:" + PORT);
   console.log("   API:    http://localhost:" + PORT + "/api/notify");
+  console.log("   Webhook: http://localhost:" + PORT + "/api/twilio-webhook");
+  console.log("   Status:  http://localhost:" + PORT + "/api/message-status?messageId=...");
   console.log("   (No Twilio required. Device-SMS / phone fallbacks work by default.)");
 });

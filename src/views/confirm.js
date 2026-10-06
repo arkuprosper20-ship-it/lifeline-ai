@@ -237,6 +237,15 @@ async function dispatchNotification(provider, contact, pkg, incident) {
       error: null,
       queueId: queued.id,
     };
+    // Also queue in Service Worker for Background Sync
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.active?.postMessage({
+          type: "QUEUE_NOTIFICATION",
+          payload: { type: provider.provider === "twilio" ? "sms" : provider.provider, contact: { id: contact.id }, incident: pkg },
+        });
+      }).catch(() => {});
+    }
     notification.provider = provider.provider;
     notification.status = NOTIFICATION_STATUS.QUEUED;
     notification.delivered = false;

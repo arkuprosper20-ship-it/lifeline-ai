@@ -150,11 +150,14 @@ async function sendTwilioSMS(contact, pkg) {
   var body = pkg.smsMessage || pkg.textMessage || "";
   var message;
   try {
-    message = await client.messages.create({
+    var statusCallback = process.env.TWILIO_STATUS_CALLBACK_URL || (process.env.BASE_URL ? process.env.BASE_URL + "/api/twilio-webhook" : null);
+    var createOpts = {
       from: process.env.SMS_FROM,
       to: to,
       body: body,
-    });
+    };
+    if (statusCallback) createOpts.statusCallback = statusCallback;
+    message = await client.messages.create(createOpts);
   } catch (error) {
     var classified = classifyTwilioError(error);
     return {
@@ -171,7 +174,7 @@ async function sendTwilioSMS(contact, pkg) {
     status: STATUS.SENT,
     delivered: false,
     messageId: message.sid,
-    note: "Message accepted by Twilio. Delivery confirmation requires a status webhook (not configured).",
+    note: "Message accepted by Twilio. Delivery confirmation via status webhook.",
     to: to,
   };
 }

@@ -123,7 +123,7 @@ export function initDeliveryStatus(params = {}) {
         </div>` : ""}
         ${provider === "twilio" && !delivered ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
-          "Sent" means Twilio accepted the request. Delivery confirmation requires a status webhook (not configured).
+          <span id="twilio-poll-status">Checking delivery status…</span>
         </div>` : ""}
         ${!hasConfig && !isOnline && providerRequiresOnline(provider) ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
@@ -218,6 +218,12 @@ export function setupDeliveryHandlers() {
       }
     });
   });
+
+  // Poll for Twilio message status if we have a messageId
+  const escalation = incident?.lastEscalation;
+  if (escalation?.provider === "twilio" && escalation?.channels?.twilio?.messageId) {
+    startTwilioStatusPolling(escalation.channels.twilio.messageId, incident.id);
+  }
 }
 
 function getDeviceLinkForIncident(incident, state) {
@@ -231,4 +237,65 @@ function getDeviceLinkForIncident(incident, state) {
   if (provider === "device-sms") return buildDeviceSMSLink(contact, pkg);
   if (provider === "phone") return buildPhoneLink(contact);
   return null;
+}
+
+function startTwilioStatusPolling(messageId, incidentId) {
+  const statusEl = document.getElementById("twilio-poll-status");
+  if (!statusEl) return;
+
+  let attempts = 0;
+  const maxAttempts = 30;
+  const intervalMs = 5000;
+
+  async function poll() {
+    try {
+      const res = await fetch(`/api/message-status?messageId=${encodeURIComponent(messageId)}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        if (res.status === 404) {
+          statusEl.textContent = "Message not found on Twilio.";
+          return;
+        }
+        throw new Error(`Status ${res.status}`);
+      }
+      const data = await res.json();
+      const status = data.status || "UNKNOWN";
+      const delivered = data.delivered === true;
+
+      statusEl.innerHTML = `<b>Status:</b> ${status} ${delivered ? "✓ Delivered" : ""}`;
+
+      if (delivered || ["DELIVERED", "FAILED", "UNDELIVERED"].includes(status)) {
+        const state = getState();
+        store.updateIncident(incidentId, {
+          lastEscalation: {
+            ...state.incidents.find(i => i.id === incidentId)?.lastEscalation,
+            status: delivered ? "DELIVERED" : status,
+            delivered,
+            note: delivered ? "Message delivered to recipient." : `Final status: ${status}`,
+            error: delivered ? null : (data.errorMessage || "Delivery failed"),
+          },
+        });
+        statusEl.innerHTML += ` <span class="badge ${delivered ? "badge-ready" : "badge-immediate"}">${delivered ? "DELIVERED" : "FINAL"}</span>`;
+        return;
+      }
+
+      attempts++;
+      if (attempts >= maxAttempts) {
+        statusEl.innerHTML += ` <span class="badge badge-monitor">Polling stopped (max attempts)</span>`;
+        return;
+      }
+      setTimeout(poll, intervalMs);
+    } catch (error) {
+      console.warn("[LIFELINE] Status poll failed:", error.message);
+      attempts++;
+      if (attempts >= maxAttempts) {
+        statusEl.textContent = "Status polling failed.";
+        return;
+      }
+      setTimeout(poll, intervalMs);
+    }
+  }
+
+  poll();
 }

@@ -11,7 +11,7 @@ import { initMapScreen, setupMap } from "./views/map.js";
 import { initHistoryScreen } from "./views/history.js";
 import { initSettingsScreen, setupSettingsHandlers } from "./views/settings.js";
 import { initContactsAdmin, setupContactsHandlers } from "./views/contacts-admin.js";
-import { initCoordinationScreen } from "./views/coordination.js";
+import { initCoordinationScreen, setupCoordinationHandlers } from "./views/coordination.js";
 import { initAuditScreen } from "./views/audit.js";
 import { initAboutScreen } from "./views/about.js";
 import { initPrivacyScreen } from "./views/privacy.js";
@@ -25,6 +25,10 @@ import { buildIncidentPackage } from "./contacts.js";
 import { fetchProviderConfig } from "./notification-providers.js";
 import { readNotifications } from "./sync.js";
 import { logout, getAuthState, AUTH_STATES } from "./auth.js";
+import { initLanguage, getLanguage, setLanguage, getAvailableLanguages } from "./i18n.js";
+import { checkAllIncidentsSLA, createSLATimer } from "./sla.js";
+import { generateAfterActionReport, generateBatchReport, generateCsvReport, downloadReport } from "./reports.js";
+import { connectWebSocket, subscribe as subscribeWS, getWebSocketStatus } from "./ws.js";
 
 const routes = {
   report: initReportScreen,
@@ -55,6 +59,7 @@ const viewSetups = {
   delivery: setupDeliveryHandlers,
   settings: setupSettingsHandlers,
   contacts: setupContactsHandlers,
+  coordination: setupCoordinationHandlers,
   auth: setupAuthHandlers,
   setup: setupWizardHandlers,
 };
@@ -427,7 +432,18 @@ initNotificationConfig();
 // When connectivity returns, retry notifications queued while offline.
 window.addEventListener("online", () => {
   setTimeout(flushQueuedNotifications, 1000);
+  registerBackgroundSync();
 });
+
+function registerBackgroundSync() {
+  if ("serviceWorker" in navigator && "SyncManager" in window) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.sync.register("lifeline-notification-sync").catch((err) => {
+        console.warn("[LIFELINE] Background sync registration failed:", err);
+      });
+    });
+  }
+}
 
 async function flushQueuedNotifications() {
   const queue = readNotifications();
@@ -464,5 +480,97 @@ async function flushQueuedNotifications() {
   if (processed > 0) showToast(processed + " offline notification(s) synced.");
   if (failed.length > 0) showToast(failed.length + " notification(s) still pending.");
 }
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data?.type === "SYNC_NOTIFICATIONS") {
+      flushQueuedNotifications();
+    }
+  });
+}
+
+// Initialize language support
+initLanguage();
+
+// Initialize SLA timers for active incidents
+function initSLATimers() {
+  const activeIncidents = getState().incidents.filter(
+    (i) => i.status === "reported" || i.status === "active" || i.status === "verify"
+  );
+  activeIncidents.forEach((incident) => {
+    createSLATimer(incident, {
+      onWarning: (sla) => {
+        console.log("[LIFELINE] SLA warning for", incident.id, sla.status);
+      },
+      onEscalation: (sla) => {
+        showToast(`Escalation: ${incident.id} approaching SLA limit`);
+      },
+      onBreach: (sla) => {
+        showToast(`SLA exceeded for ${incident.id}`, "error");
+      },
+    });
+  });
+}
+
+initSLATimers();
+
+// Initialize WebSocket real-time sync for coordination dashboard
+function initWebSocket() {
+  const token = getState().settings.wsToken || getState().currentUser?.token;
+  const ws = connectWebSocket(token);
+  
+  subscribeWS((message) => {
+    if (message.type === "incident_update") {
+      const incident = message.incident;
+      const existing = getState().incidents.find((i) => i.id === incident.id);
+      if (existing) {
+        store.updateIncident(incident.id, incident);
+      } else {
+        store.addIncident(incident);
+      }
+    }
+    if (message.type === "incident_created") {
+      store.addIncident(message.incident);
+    }
+    if (message.type === "sync_response") {
+      console.log("[LIFELINE] Sync response received", message.data);
+    }
+    if (message.type === "ws_status") {
+      console.log("[LIFELINE] WebSocket status:", message.status);
+    }
+  });
+
+  return ws;
+}
+
+if (getState().isOnline && getState().settings.wsEnabled !== false) {
+  try {
+    initWebSocket();
+  } catch (e) {
+    console.warn("[LIFELINE] WebSocket init failed:", e);
+  }
+}
+
+// Periodically check SLA status for all active incidents
+setInterval(() => {
+  const slaResults = checkAllIncidentsSLA(getState().incidents);
+  if (slaResults.some((s) => s.status === "breached")) {
+    const breached = slaResults.filter((s) => s.status === "breached");
+    if (breached.length > 0) {
+      showToast(`${breached.length} incident(s) exceeded SLA`, "warning");
+    }
+  }
+}, 60000);
+
+// Expose report generation utilities
+window.LIFELINE_REPORTS = {
+  generateAfterActionReport,
+  generateBatchReport,
+  generateCsvReport,
+  downloadReport,
+  getAvailableLanguages,
+  setLanguage,
+  getLanguage,
+};
 
 render();

@@ -63,17 +63,22 @@ LIFELINE AI provides a unified platform that:
 - **Explainable AI**: Shows why an incident was classified with evidence-based explanations
 - **Progressive Web App**: Installable, works on mobile and desktop
 - **Privacy-Focused**: Location only shared with explicit consent, no data sold
+- **Multi-language Support**: English, Spanish, French — with runtime switching
+- **SLA Tracking**: Automatic escalation timers with breach alerts per urgency level
+- **After-Action Reports**: Generate structured reports (JSON, Markdown, CSV) for incidents
 
 ---
 
 ## Interactive Map
 
-LIFELINE includes a full operational incident map built with **Leaflet** and **OpenStreetMap** tiles. **No paid map API key is required for the core map.** Access it from `Launch App → 🗺 Map`, or from the **Incident Map** panel in the coordination dashboard.
+LIFELINE includes a full operational incident map built with **Leaflet** and **OpenStreetMap tiles**. **No paid map API key is required for the core map.** Access it from `Launch App → 🗺 Map`, or from the **Incident Map** panel in the coordination dashboard.
 
 **Map technology**
-- Library: [Leaflet](https://leafletjs.com/) (loaded from the `unpkg.com` CDN)
-- Tiles: [OpenStreetMap](https://www.openstreetmap.org/) — `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`
+- Primary: Leaflet (loaded from the `unpkg.com` CDN)
+- Optional: MapLibre GL JS with vector tiles for improved performance and offline caching
+- Tiles: OpenStreetMap — `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png` (raster) or vector tiles
 - No Google Maps API key is required. Google Maps links are generated as shareable URLs only.
+- The app automatically uses MapLibre GL when available, falling back to Leaflet raster tiles otherwise.
 
 **Attribution**
 - © OpenStreetMap contributors. Tiles © openstreetmap.org. Map data © OSM contributors.
@@ -301,15 +306,21 @@ Escalation Recommendation
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Vanilla JavaScript (ES modules), HTML, CSS |
-| Map | Leaflet + OpenStreetMap |
+| Frontend | Vanilla JavaScript (ES modules), HTML, CSS, TypeScript types |
+| Map | Leaflet + MapLibre GL (vector tiles, offline support) |
 | Location | Browser Geolocation API |
 | Voice | Web Speech API, MediaRecorder API |
-| Storage | IndexedDB + localStorage (offline-first) |
+| Storage | IndexedDB (primary) + localStorage (fallback), Service Worker |
 | AI | Groq Cloud API (with local rules fallback) |
-| PWA | Manifest v3, Service Worker |
+| PWA | Manifest v3, Service Worker, Background Sync |
 | Backend | Node.js serverless functions |
 | Auth | Local (PBKDF2) or Firebase Auth |
+| Realtime | WebSocket (coordination dashboard) |
+| Encryption | Web Crypto API (AES-256-GCM, PBKDF2) |
+| SLA | Response timers with escalation thresholds |
+| Reporting | After-action reports (JSON, Markdown, CSV) |
+| Testing | Node.js native tests + Playwright E2E |
+| i18n | Multi-language (EN, ES, FR)
 
 ---
 
@@ -363,7 +374,9 @@ For full backend support (SMS/email/webhook), deploy with Vercel or any Node.js 
 ## Testing
 
 ```bash
-node --test
+node --test          # Unit tests
+npm run typecheck    # TypeScript type checking
+cd tests/e2e && npm install && npm test  # E2E tests with Playwright
 ```
 
 Tests cover:
@@ -373,6 +386,11 @@ Tests cover:
 - Location validation
 - Incident ID generation
 - Local analysis accuracy
+- SLA tracking and escalation thresholds
+- After-action report generation
+- Notification provider selection
+- Map helpers and privacy handling
+- E2E user flows (report → analyze → escalate → deliver)
 
 ---
 

@@ -12,6 +12,14 @@
     {
       "src": "/api/analyze.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "/api/twilio-webhook.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "/api/message-status.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
