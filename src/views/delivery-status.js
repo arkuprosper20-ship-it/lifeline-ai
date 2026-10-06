@@ -123,7 +123,7 @@ export function initDeliveryStatus(params = {}) {
         </div>` : ""}
         ${provider === "twilio" && !delivered ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
-          <span id="twilio-poll-status">Checking delivery status…</span>
+          <span id="twilio-poll-status">Checking delivery status...</span>
         </div>` : ""}
         ${!hasConfig && !isOnline && providerRequiresOnline(provider) ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
@@ -214,7 +214,7 @@ export function setupDeliveryHandlers() {
       const link = getDeviceLinkForIncident(incident, state);
       if (link) {
         window.location.href = link;
-        showToast("Device interface opening…");
+        showToast("Device interface opening...");
       }
     });
   });

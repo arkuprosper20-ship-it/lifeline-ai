@@ -1,4 +1,4 @@
-// LIFELINE AI — Map screen (MapLibre vector tiles + Leaflet fallback)
+// LIFELINE AI - Map screen (MapLibre vector tiles + Leaflet fallback)
 import { getState, store } from "../store.js";
 import { esc, showToast, formatTimeAgo, loadLeaflet } from "../ui.js";
 import {
@@ -64,8 +64,8 @@ function renderIncidentListItems(incidents) {
         <div class="incident-item" data-incident="${esc(inc.id)}" style="cursor:pointer;">
           <span class="incident-type-icon">${typeInfo.icon}</span>
           <div class="incident-text">
-            <div class="incident-title">${esc(inc.id)} — ${esc(typeInfo.label)}</div>
-            <div class="incident-meta">${formatTimeAgo(inc.timestamp)} · ${esc(spec.label)}</div>
+            <div class="incident-title">${esc(inc.id)} - ${esc(typeInfo.label)}</div>
+            <div class="incident-meta">${formatTimeAgo(inc.timestamp)} . ${esc(spec.label)}</div>
           </div>
           <span class="badge ${spec.badge}" style="font-size:10px;">${esc(spec.label)}</span>
         </div>`;
@@ -84,8 +84,8 @@ export function initMapScreen() {
     <div class="map-screen">
       <div id="map-banner" class="card" style="display:${!online || showDemo ? "flex" : "none"};">
         <div class="flex-center gap-sm" style="gap:8px;">
-          <span id="map-banner-icon">${showDemo ? "🧪" : "&#9888;"}</span>
-          <span id="map-banner-text" style="font-size:13px;">${showDemo ? "DEMO MODE — displaying sample incidents. Your real reports will appear here once locations are captured." : "You are offline. Map tiles cannot load, but incidents stored on this device remain available below."}</span>
+          <span id="map-banner-icon">${showDemo ? "[TEST]" : "&#9888;"}</span>
+          <span id="map-banner-text" style="font-size:13px;">${showDemo ? "DEMO MODE - displaying sample incidents. Your real reports will appear here once locations are captured." : "You are offline. Map tiles cannot load, but incidents stored on this device remain available below."}</span>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ export function initMapScreen() {
           <div id="map-placeholder" class="flex-center" style="height:100%;">
             <div class="text-center">
               <div style="font-size:32px; margin-bottom:8px;">&#128504;</div>
-              <p class="mu" style="color:var(--text-secondary);">${online ? "Loading map…" : "MAP OFFLINE"}</p>
+              <p class="mu" style="color:var(--text-secondary);">${online ? "Loading map..." : "MAP OFFLINE"}</p>
             </div>
           </div>
         </div>
@@ -105,7 +105,7 @@ export function initMapScreen() {
             <span class="badge ${showDemo ? "badge-warning" : online ? "badge-ready" : "badge-immediate"}" style="font-size:10px;">${showDemo ? "DEMO" : online ? "ONLINE" : "OFFLINE"}</span>
           </div>
 
-          <input type="text" id="map-search" class="form-input" placeholder="Search by ID, type, or keyword…" style="padding:8px 10px;font-size:13px;margin-bottom:8px;" value="" />
+          <input type="text" id="map-search" class="form-input" placeholder="Search by ID, type, or keyword..." style="padding:8px 10px;font-size:13px;margin-bottom:8px;" value="" />
 
           ${renderFilterSelect("map-filter-category", "Category", getCategoryOptions(), "all")}
           ${renderFilterSelect("map-filter-urgency", "Urgency", getUrgencyOptions(), "all")}
@@ -158,12 +158,12 @@ function popupContent(inc, isDashboard) {
   const fieldsHtml = fields
     ? fields
         .map((f) => {
-          let val = esc(f.value) || "—";
-          if (f.type === "link" && f.link) val = `<a href="${f.link}" target="_blank" rel="noopener" style="color:var(--accent);">OPEN IN GOOGLE MAPS →</a>`;
+let val = esc(f.value) || "-";
+if (f.type === "link" && f.link) val = `<a href="${f.link}" target="_blank" rel="noopener" style="color:var(--accent);">OPEN IN GOOGLE MAPS -></a>`;
           return `<div style="margin:2px 0;"><b style="color:var(--text-tertiary);font-size:11px;">${f.label}:</b> <span style="font-size:12px;">${f.icon ? f.icon + " " : ""}${val}</span></div>`;
         })
         .join("")
-    : `<div style="margin:4px 0;">${esc(inc.summary || (inc.observations || []).join(", ") || "—")}</div>`;
+    : `<div style="margin:4px 0;">${esc(inc.summary || (inc.observations || []).join(", ") || "-")}</div>`;
   return `
     <div style="font-size:13px;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
@@ -172,7 +172,7 @@ function popupContent(inc, isDashboard) {
       </div>
       <div style="color:var(--text-tertiary);font-size:12px;margin:4px 0;">${esc(typeInfo.label)} · ${esc(inc.urgency || "")}</div>
       ${fieldsHtml}
-      ${link ? `<a href="${link}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);">OPEN MAP →</a>` : "<span style='font-size:11px;color:var(--text-tertiary);'>No coordinates</span>"}
+      ${link ? `<a href="${link}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);">OPEN MAP -></a>` : "<span style='font-size:11px;color:var(--text-tertiary);'>No coordinates</span>"}
       ${!isDashboard ? `<div style="margin-top:6px;"><button type="button" class="btn btn-primary" style="width:100%;font-size:12px;padding:6px;" data-view-incident="${esc(inc.id)}">VIEW INCIDENT</button></div>` : ""}
     </div>`;
 }
@@ -320,11 +320,11 @@ export function setupMap(containerId = "incident-map", options = {}) {
     const fields = incidentDetailFields(inc);
     body.innerHTML = fields
       .map((f) => {
-        let val = esc(f.value) || "—";
-        if (f.type === "link" && f.link) val = `<a href="${f.link}" target="_blank" rel="noopener" style="color:var(--accent);">OPEN IN GOOGLE MAPS →</a>`;
+        let val = esc(f.value) || "-";
+        if (f.type === "link" && f.link) val = `<a href="${f.link}" target="_blank" rel="noopener" style="color:var(--accent);">OPEN IN GOOGLE MAPS -></a>`;
         if (f.type === "list") {
           const arr = Array.isArray(f.value) ? f.value : [];
-          val = arr.length ? arr.map((e) => `<div class="text-small" style="margin-bottom:4px;">${esc(typeof e === "string" ? e : JSON.stringify(e))}</div>`).join("") : "—";
+          val = arr.length ? arr.map((e) => `<div class="text-small" style="margin-bottom:4px;">${esc(typeof e === "string" ? e : JSON.stringify(e))}</div>`).join("") : "-";
         }
         return `
           <div style="margin-bottom:12px;">
@@ -382,7 +382,7 @@ export function setupMap(containerId = "incident-map", options = {}) {
     }
     const status = document.getElementById("locate-status");
     if (!status) return;
-    showBanner(LOCATION_STATES.REQUESTING, "Requesting location permission…");
+    showBanner(LOCATION_STATES.REQUESTING, "Requesting location permission...");
     const geoSupported = typeof navigator !== "undefined" && !!navigator.geolocation;
     const perm = await getPermissionState();
     try {
@@ -417,7 +417,7 @@ export function setupMap(containerId = "incident-map", options = {}) {
       <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
         <div><b>Latitude:</b> ${Number(loc.latitude).toFixed(6)}</div>
         <div><b>Longitude:</b> ${Number(loc.longitude).toFixed(6)}</div>
-        <div><b>Accuracy:</b> ${loc.accuracy ? `±${Math.round(loc.accuracy)} m` : "Unknown"}</div>
+        <div><b>Accuracy:</b> ${loc.accuracy ? `+/-${Math.round(loc.accuracy)} m` : "Unknown"}</div>
         <div><b>Timestamp:</b> ${new Date(loc.timestamp).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</div>
       </div>`;
     const row = document.getElementById("current-location-link-row");

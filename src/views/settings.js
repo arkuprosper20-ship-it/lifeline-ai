@@ -92,7 +92,7 @@ export function initSettingsScreen() {
       <div class="card">
         <h3>Notifications</h3>
         <p class="mu" style="margin-bottom:8px;">
-          ${state.notificationConfig ? (state.notificationConfig.twilioConfigured ? "SMS provider: Twilio (configured)" : "SMS provider: Device SMS fallback (Twilio not configured)") : "Checking notification configuration…"}
+          ${state.notificationConfig ? (state.notificationConfig.twilioConfigured ? "SMS provider: Twilio (configured)" : "SMS provider: Device SMS fallback (Twilio not configured)") : "Checking notification configuration..."}
         </p>
         <p class="mu text-small" style="margin-bottom:8px;">
           Twilio is <b>optional</b>. Without it, LIFELINE opens your device SMS composer or dialer

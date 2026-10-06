@@ -127,7 +127,7 @@ export function initCoordinationScreen() {
         <h3>AI system health</h3>
         <div style="font-size:13px; color:var(--text-secondary); line-height:1.8;">
           <div>Local rules engine: ● ONLINE</div>
-          <div>Groq Cloud AI: ${getState().settings.mode === "local" || getState().settings.mode === "rules" ? "○ DISABLED" : getState().isOnline ? "● CHECKING…" : "○ UNAVAILABLE (offline)"}</div>
+          <div>Groq Cloud AI: ${getState().settings.mode === "local" || getState().settings.mode === "rules" ? "○ DISABLED" : getState().isOnline ? "● CHECKING..." : "○ UNAVAILABLE (offline)"}</div>
           <div>Offline sync queue: ${getState().syncQueue?.length || 0} pending</div>
         </div>
       </div>

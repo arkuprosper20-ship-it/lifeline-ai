@@ -1,4 +1,4 @@
-// LIFELINE AI — Vector tile support for MapLibre GL JS
+// LIFELINE AI - Vector tile support for MapLibre GL JS
 // Replaces raster OpenStreetMap tiles with vector tiles for better
 // performance, offline caching, and styling control.
 // Falls back gracefully to Leaflet + raster tiles if MapLibre is unavailable.
