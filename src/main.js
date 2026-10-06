@@ -1,4 +1,4 @@
-// LIFELINE AI — Main entry point and router
+// LIFELINE AI - Main entry point and router
 import { store, getState, subscribe } from "./store.js";
 import { initReportScreen } from "./views/report.js";
 import { initAnalysisScreen } from "./views/analysis.js";
