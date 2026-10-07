@@ -3,7 +3,7 @@
 // performance, offline caching, and styling control.
 // Falls back gracefully to Leaflet + raster tiles if MapLibre is unavailable.
 
-const TILE_CONFIG = {
+export const TILE_CONFIG = {
   // MapLibre vector tile endpoint (no API key required)
   vectorUrl: "https://tiles.openstreetmap.org/v/{z}/{x}/{y}.pbf",
   // Raster fallback (original Leaflet behavior)
@@ -34,32 +34,32 @@ export const TILE_STYLE = {
     {
       id: "land",
       type: "fill",
-      source-layer: "land",
+      "source-layer": "land",
       paint: { "fill-color": "#16213e" },
     },
     {
       id: "water",
       type: "fill",
-      source-layer: "water",
+      "source-layer": "water",
       paint: { "fill-color": "#0f3460" },
     },
     {
       id: "roads",
       type: "line",
-      source-layer: "roads",
+      "source-layer": "roads",
       paint: { "line-color": "#3a3a5a", "line-width": 1 },
     },
     {
       id: "roads-primary",
       type: "line",
-      source-layer: "roads",
+      "source-layer": "roads",
       filter: ["==", ["get", "class"], "primary"],
       paint: { "line-color": "#e94560", "line-width": 2 },
     },
     {
       id: "labels",
       type: "symbol",
-      source-layer: "place",
+      "source-layer": "place",
       layout: { "text-field": "{name}", "text-size": 12 },
       paint: { "text-color": "#888" },
     },

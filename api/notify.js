@@ -243,7 +243,7 @@ async function sendWebhook(contact, pkg) {
     try {
       data = await response.json();
     } catch {
-       - treat as accepted
+      // treat as accepted
     }
     return {
       provider: "webhook",
