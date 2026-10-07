@@ -7,7 +7,7 @@ export const INCIDENT_TYPES = [
   { id: "road_hazard", label: "Road obstruction", icon: "[ROAD]", color: "type-road" },
   { id: "power_hazard", label: "Power/Electrical", icon: "[POWER]", color: "type-power" },
   { id: "environmental", label: "Building/Environmental", icon: "[BUILD]", color: "type-environmental" },
-  { id: "security", label: "Security concern", icon: "[WARN]️", color: "type-security" },
+  { id: "security", label: "Security concern", icon: "[WARN]", color: "type-security" },
   { id: "missing_person", label: "Missing person/pet", icon: "[SEARCH]", color: "type-missing" },
   { id: "community_assistance", label: "Community assistance", icon: "[HELP]", color: "type-community" },
   { id: "unknown", label: "Other/unknown", icon: "[?]", color: "type-other" },

@@ -6,10 +6,10 @@ export function initAboutScreen() {
   return `
     <div class="about-screen">
       <div class="card text-center" style="padding:32px 20px;">
-        <div style="font-size:56px; margin-bottom:12px;">🛡️</div>
+        <div style="font-size:56px; margin-bottom:12px;"></div>
         <h1 style="font-size:28px;">LIFELINE AI</h1>
         <p class="mu" style="margin-bottom:4px; font-size:14px;">Turn chaos into coordinated action.</p>
-        <p class="text-small text-muted">v1.0.0 — Community Incident Intelligence</p>
+        <p class="text-small text-muted">v1.0.0 - Community Incident Intelligence</p>
       </div>
 
       <div class="card">
@@ -18,7 +18,7 @@ export function initAboutScreen() {
           LIFELINE AI is an AI-powered, multimodal, offline-first community incident
           intelligence platform. It transforms text, voice, and image reports into
           structured incident briefs, identifies potential response needs, clusters
-          related community reports, and — after explicit user confirmation — routes
+          related community reports, and - after explicit user confirmation - routes
           information and the user's approved current location to the appropriate
           configured response contact through phone, SMS, email, or organizational integrations.
         </p>

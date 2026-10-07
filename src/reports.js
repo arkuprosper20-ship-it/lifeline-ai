@@ -65,7 +65,7 @@ function buildTimeline(incident) {
     timeline.push({
       at: incident.lastEscalation.at,
       label: "Escalation sent",
-      icon: "📤",
+      icon: "",
       details: `${incident.lastEscalation.method} to ${incident.lastEscalation.contactName}`,
     });
     if (incident.lastEscalation.status === "DELIVERED") {
@@ -81,7 +81,7 @@ function buildTimeline(incident) {
     timeline.push({
       at: incident.verifiedAt,
       label: "Incident verified",
-      icon: "✅",
+      icon: "[OK]",
       details: "Incident confirmed by coordinator",
     });
   }
@@ -89,7 +89,7 @@ function buildTimeline(incident) {
     timeline.push({
       at: incident.resolvedAt,
       label: "Incident resolved",
-      icon: "✅",
+      icon: "[OK]",
       details: "Marked as resolved",
     });
   }
@@ -213,7 +213,7 @@ function identifyLessons(incident) {
 }
 
 function formatAsText(report, pkg) {
-  let output = `LIFELINE AI — AFTER-ACTION REPORT
+  let output = `LIFELINE AI - AFTER-ACTION REPORT
 =====================================
 
 Report ID: ${report.reportId}
@@ -265,7 +265,7 @@ TIMELINE
 }
 
 function formatAsMarkdown(report, pkg) {
-  let output = `# LIFELINE AI — After-Action Report
+  let output = `# LIFELINE AI - After-Action Report
 
 **Report ID:** ${report.reportId}
 **Generated:** ${formatDate(report.generatedAt)} ${formatTimestamp(report.generatedAt)}
@@ -279,13 +279,13 @@ function formatAsMarkdown(report, pkg) {
 | Urgency | ${report.urgency?.toUpperCase()} |
 | Status | ${report.status} |
 | Confidence | ${Math.round(report.summary.confidence * 100)}% |
-| Safety Override | ${report.summary.safetyOverride ? "✅ Applied" : "No"} |
+| Safety Override | ${report.summary.safetyOverride ? "[OK] Applied" : "No"} |
 
 ## Timeline
 
 `;
   report.timeline.forEach((event) => {
-    output += `- **${event.formattedTime}** — ${event.label}: ${event.details}\n`;
+    output += `- **${event.formattedTime}** - ${event.label}: ${event.details}\n`;
   });
 
   output += `

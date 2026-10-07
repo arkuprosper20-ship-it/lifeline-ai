@@ -65,7 +65,7 @@ export function initEscalationScreen(params = {}) {
         </ul>
 
         <div class="btn-row" style="margin-top:16px;">
-          <button class="btn btn-secondary" data-action="navigate" data-to="brief">← Edit report</button>
+          <button class="btn btn-secondary" data-action="navigate" data-to="brief"><- Edit report</button>
           <button class="btn btn-primary" data-action="confirm-escalation" data-contact="${responseContact?.id || emergencyContact?.category || ''}">
             REVIEW & CONFIRM
           </button>
@@ -114,7 +114,7 @@ export async function setupEscalationHandlers() {
       const incident = state.ui.selectedIncident || state.incidents[0];
       if (phone && incident) {
         const pkg = buildIncidentPackage(incident);
-        const body = encodeURIComponent(pkg.smsMessage || `LIFELINE ${incident.id} — ${incident.urgency?.toUpperCase() || ""}`);
+        const body = encodeURIComponent(pkg.smsMessage || `LIFELINE ${incident.id} - ${incident.urgency?.toUpperCase() || ""}`);
         showToast("Opening SMS composer...");
         window.location.href = `sms:${phone}?body=${body}`;
       }

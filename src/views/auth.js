@@ -7,7 +7,7 @@ export function initAuthScreen() {
   return `
     <div class="auth-screen" style="max-width:420px; margin:40px auto;">
       <div class="card text-center" style="padding:32px 20px;">
-        <div style="font-size:48px; margin-bottom:12px;">🛡️</div>
+        <div style="font-size:48px; margin-bottom:12px;"></div>
         <h1 style="font-size:24px;">LIFELINE AI</h1>
         <p class="mu">Community incident intelligence</p>
         <p class="text-small text-muted">${mode === "firebase" ? "Firebase authentication" : "Local authentication"}</p>

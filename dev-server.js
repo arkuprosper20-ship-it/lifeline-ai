@@ -1,4 +1,4 @@
-// LIFELINE AI — minimal local dev server (zero dependencies)
+// LIFELINE AI - minimal local dev server (zero dependencies)
 // Serves the static PWA and proxies /api/* to the local Node handlers.
 // Twilio is NOT required: api/notify.js gracefully falls back when it is
 // absent or unconfigured.
@@ -48,7 +48,7 @@ function loadDotEnv(file) {
       if (!(key in process.env)) process.env[key] = value;
     }
   } catch (e) {
-    // no .env — fine, defaults apply
+    // no .env - fine, defaults apply
   }
 }
 
@@ -65,7 +65,7 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", "http://localhost");
   const pathname = url.pathname;
 
-  // API proxy — runs the serverless handler in-process.
+  // API proxy - runs the serverless handler in-process.
   if (pathname === "/api/notify" || pathname.startsWith("/api/notify/")) {
     API_NOTIFY(req, res);
     return;

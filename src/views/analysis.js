@@ -40,7 +40,7 @@ export function initAnalysisScreen(params = {}) {
 
       ${!analysisResult && !isAnalyzing ? `
       <div class="card text-center" style="padding:32px 20px;">
-        <div style="font-size:48px; margin-bottom:12px;">🤖</div>
+        <div style="font-size:48px; margin-bottom:12px;"></div>
         <h3>Ready to analyze</h3>
         <p class="mu">Press analyze to classify this incident and generate an incident brief.</p>
         <button type="button" class="btn btn-primary" data-action="analyze-report" style="margin-top:12px;">

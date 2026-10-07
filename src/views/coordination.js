@@ -27,7 +27,7 @@ export function initCoordinationScreen() {
         </div>
         <p class="mu" style="margin-bottom:4px;">Community incident coordination dashboard.</p>
         <div class="text-small text-muted">
-          ${getState().isOnline ? "● Online" : "[o] Offline mode"}
+          ${getState().isOnline ? "[*] Online" : "[o] Offline mode"}
         </div>
       </div>
 
@@ -70,7 +70,7 @@ export function initCoordinationScreen() {
                 <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border);">
                   <span>${esc(s.incidentId)}</span>
                   <span style="color:${s.level === "critical" ? "var(--status-immediate)" : s.level === "warning" ? "var(--status-urgent)" : s.level === "caution" ? "var(--status-verify)" : "var(--status-ready)"}">
-                    ${s.status.toUpperCase()} — ${s.elapsed} elapsed
+                    ${s.status.toUpperCase()} - ${s.elapsed} elapsed
                   </span>
                 </div>
               `).join("")}
@@ -112,7 +112,7 @@ export function initCoordinationScreen() {
             <div class="incident-item">
               <span class="incident-type-icon">${typeInfo.icon}</span>
               <div class="incident-text">
-                <div class="incident-title">${esc(incident.id)} — ${esc(typeInfo.label)}</div>
+                <div class="incident-title">${esc(incident.id)} - ${esc(typeInfo.label)}</div>
                 <div class="incident-meta">
                   Escalation: ${esc(getStatusLabel(incident.status))} . ${formatTimeAgo(incident.lastEscalation.at)}
                 </div>
@@ -126,8 +126,8 @@ export function initCoordinationScreen() {
       <div class="card">
         <h3>AI system health</h3>
         <div style="font-size:13px; color:var(--text-secondary); line-height:1.8;">
-          <div>Local rules engine: ● ONLINE</div>
-          <div>Groq Cloud AI: ${getState().settings.mode === "local" || getState().settings.mode === "rules" ? "[o] DISABLED" : getState().isOnline ? "● CHECKING..." : "[o] UNAVAILABLE (offline)"}</div>
+          <div>Local rules engine: [*] ONLINE</div>
+          <div>Groq Cloud AI: ${getState().settings.mode === "local" || getState().settings.mode === "rules" ? "[o] DISABLED" : getState().isOnline ? "[*] CHECKING..." : "[o] UNAVAILABLE (offline)"}</div>
           <div>Offline sync queue: ${getState().syncQueue?.length || 0} pending</div>
         </div>
       </div>

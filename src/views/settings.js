@@ -43,7 +43,7 @@ export function initSettingsScreen() {
         </label>
 
         <div class="mu text-small" style="margin-top:8px;">
-          ${state.isOnline ? '● ONLINE — AI enhancement available' : '[o] OFFLINE — using local rules'}
+          ${state.isOnline ? '[*] ONLINE - AI enhancement available' : '[o] OFFLINE - using local rules'}
         </div>
       </div>
 
@@ -141,7 +141,7 @@ export function initSettingsScreen() {
         </p>
         <p class="mu">
           ${state.syncQueue?.length || 0} report(s) waiting to sync.
-          ${state.isOnline ? '● Ready to sync' : '[o] Offline'}
+          ${state.isOnline ? '[*] Ready to sync' : '[o] Offline'}
         </p>
         <button type="button" class="btn btn-secondary btn-sm" id="clear-storage">
           Clear local data

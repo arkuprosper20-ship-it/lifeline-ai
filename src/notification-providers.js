@@ -207,7 +207,7 @@ export function getDemoNotification(pkg, contact) {
     recipient: "Demo Response Team",
     provider: "demo",
     status: NOTIFICATION_STATUS.SIMULATED,
-    message: "Demo notification — no real message was sent.",
+    message: "Demo notification - no real message was sent.",
   };
 }
 

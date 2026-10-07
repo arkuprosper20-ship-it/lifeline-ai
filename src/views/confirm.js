@@ -232,7 +232,7 @@ async function dispatchNotification(provider, contact, pkg, incident) {
       method: provider.provider === "twilio" ? "SMS" : provider.provider === "email" ? "Email" : "Webhook",
       status: NOTIFICATION_STATUS.QUEUED,
       delivered: false,
-      note: "Offline — notification queued. It will send automatically when the connection returns. You can also retry from the delivery screen.",
+      note: "Offline - notification queued. It will send automatically when the connection returns. You can also retry from the delivery screen.",
       messageId: null,
       error: null,
       queueId: queued.id,
@@ -280,7 +280,7 @@ async function dispatchNotification(provider, contact, pkg, incident) {
       method: "DEMO",
       status: NOTIFICATION_STATUS.SIMULATED,
       delivered: false,
-      note: "Demo notification — no real message was sent.",
+      note: "Demo notification - no real message was sent.",
       messageId: null,
       error: null,
     };

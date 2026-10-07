@@ -18,18 +18,18 @@ import { INCIDENT_TYPES } from "../types.js";
 function channelView(escalation, provider) {
   // Map the single selected provider into per-channel view state.
   const ch = (escalation && escalation.channels) || {};
-  const smsStatus = ch["device-sms"] ? ch["device-sms"].status : provider === "twilio" ? (escalation ? escalation.status : "—") : provider === "device-sms" ? (escalation ? escalation.status : "—") : "—";
-  const phoneStatus = ch.phone ? ch.phone.status : provider === "phone" ? (escalation ? escalation.status : "—") : "—";
-  const emailStatus = ch.email ? ch.email.status : provider === "email" ? (escalation ? escalation.status : "—") : "—";
-  const webhookStatus = ch.webhook ? ch.webhook.status : provider === "webhook" ? (escalation ? escalation.status : "—") : "—";
-  const demoStatus = ch.demo ? ch.demo.status : provider === "demo" ? (escalation ? escalation.status : "—") : "—";
+  const smsStatus = ch["device-sms"] ? ch["device-sms"].status : provider === "twilio" ? (escalation ? escalation.status : "-") : provider === "device-sms" ? (escalation ? escalation.status : "-") : "-";
+  const phoneStatus = ch.phone ? ch.phone.status : provider === "phone" ? (escalation ? escalation.status : "-") : "-";
+  const emailStatus = ch.email ? ch.email.status : provider === "email" ? (escalation ? escalation.status : "-") : "-";
+  const webhookStatus = ch.webhook ? ch.webhook.status : provider === "webhook" ? (escalation ? escalation.status : "-") : "-";
+  const demoStatus = ch.demo ? ch.demo.status : provider === "demo" ? (escalation ? escalation.status : "-") : "-";
 
   return {
-    sms: { status: smsStatus, done: smsStatus !== "—" && provider === "twilio" },
-    phone: { status: phoneStatus, done: phoneStatus !== "—" && provider === "phone" },
-    email: { status: emailStatus, done: emailStatus !== "—" && provider === "email" },
-    webhook: { status: webhookStatus, done: webhookStatus !== "—" && provider === "webhook" },
-    demo: { status: demoStatus, done: demoStatus !== "—" },
+    sms: { status: smsStatus, done: smsStatus !== "-" && provider === "twilio" },
+    phone: { status: phoneStatus, done: phoneStatus !== "-" && provider === "phone" },
+    email: { status: emailStatus, done: emailStatus !== "-" && provider === "email" },
+    webhook: { status: webhookStatus, done: webhookStatus !== "-" && provider === "webhook" },
+    demo: { status: demoStatus, done: demoStatus !== "-" },
   };
 }
 
@@ -70,7 +70,7 @@ export function initDeliveryStatus(params = {}) {
       <div class="card">
         <h2>Delivery status</h2>
         <p class="mu">LIFELINE ${esc(incident.id)}</p>
-        <span class="text-small" style="color:var(--text-tertiary);">${isOnline ? "● Online" : "[o] Offline"}</span>
+        <span class="text-small" style="color:var(--text-tertiary);">${isOnline ? "[*] Online" : "[o] Offline"}</span>
       </div>
 
       <div class="card">
@@ -111,11 +111,11 @@ export function initDeliveryStatus(params = {}) {
 
         ${provider === "device-sms" ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
-          [WARN] SMS composer opens via the button below. LIFELINE cannot confirm delivery — it is handled by your device and carrier.
+          [WARN] SMS composer opens via the button below. LIFELINE cannot confirm delivery - it is handled by your device and carrier.
         </div>` : ""}
         ${provider === "phone" ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
-          [WARN] Phone dialer opens via the button below. LIFELINE cannot confirm the call was completed — handled by your device.
+          [WARN] Phone dialer opens via the button below. LIFELINE cannot confirm the call was completed - handled by your device.
         </div>` : ""}
         ${provider === "demo" ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
@@ -171,9 +171,9 @@ export function initDeliveryStatus(params = {}) {
 }
 
 function channelStep(label, status, done) {
-  const indicator = !done ? "[o]" : status === "FAILED" ? "✗" : "[OK]";
+  const indicator = !done ? "[o]" : status === "FAILED" ? "[X]" : "[OK]";
   const cls = !done ? "pending" : status === "FAILED" ? "" : "complete";
-  const show = status && status !== "—" ? status : "—";
+  const show = status && status !== "-" ? status : "-";
   return `
     <div class="progress-step">
       <div class="step-indicator ${cls}">${indicator}</div>

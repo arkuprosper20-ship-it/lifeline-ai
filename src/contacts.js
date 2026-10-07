@@ -126,7 +126,7 @@ function buildTextMessage(incident, typeLabel, obsLines, missingLines, locationS
 }
 
 function buildSMSMessage(incident, typeLabel, obsLines, mapLink) {
-  let msg = `LIFELINE ${incident.id} — ${typeLabel}`;
+  let msg = `LIFELINE ${incident.id} - ${typeLabel}`;
   if (mapLink) msg += `\nLocation: ${mapLink}`;
   if (obsLines) msg += `\n\n${obsLines.split("\n").slice(0, 3).join("\n")}`;
   msg += "\n\nNeeds verification.";
@@ -135,7 +135,7 @@ function buildSMSMessage(incident, typeLabel, obsLines, mapLink) {
 }
 
 function buildEmailSubject(incident, typeLabel) {
-  return `LIFELINE ${incident.id} — ${typeLabel}${incident.urgency === "urgent" || incident.urgency === "immediate" ? " — URGENT" : ""}`;
+  return `LIFELINE ${incident.id} - ${typeLabel}${incident.urgency === "urgent" || incident.urgency === "immediate" ? " - URGENT" : ""}`;
 }
 
 function buildEmailBody(incident, typeLabel, obsLines, missingLines, locationSection, mapLink) {
@@ -163,7 +163,7 @@ report and has not been independently verified. If this
 is an emergency, contact your local emergency services
 immediately.
 
-— LIFELINE AI
+- LIFELINE AI
 `;
 }
 

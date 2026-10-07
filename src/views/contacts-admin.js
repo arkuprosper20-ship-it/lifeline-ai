@@ -11,7 +11,7 @@ export function initContactsAdmin() {
         <div class="flex-between">
           <h2>Response contacts</h2>
           <button class="btn btn-secondary" data-action="navigate" data-to="settings" style="font-size:12px; padding:6px 12px;">
-            ← Back
+            <- Back
           </button>
         </div>
         <p class="mu">Configure response teams for each incident category.</p>

@@ -77,7 +77,7 @@ export function initReportScreen() {
 }
 
 function getTypeIcon(type) {
-  const icons = { fire_smoke: "[FIRE]", medical: "[HOSPITAL]", flooding: "[FLOOD]", road_hazard: "[ROAD]", power_hazard: "[POWER]", environmental: "[BUILD]", security: "[WARN]️", missing_person: "[SEARCH]", community_assistance: "[HELP]", unknown: "[?]" };
+  const icons = { fire_smoke: "[FIRE]", medical: "[HOSPITAL]", flooding: "[FLOOD]", road_hazard: "[ROAD]", power_hazard: "[POWER]", environmental: "[BUILD]", security: "[WARN]", missing_person: "[SEARCH]", community_assistance: "[HELP]", unknown: "[?]" };
   return icons[type] || "[LIST]";
 }
 

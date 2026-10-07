@@ -6,11 +6,11 @@ import { esc } from "../ui.js";
 import { INCIDENT_TYPES, RESPONSE_CATEGORIES } from "../types.js";
 
 const SETUP_STEPS = [
-  { id: "welcome", label: "Welcome", icon: "👋" },
-  { id: "country", label: "Country", icon: "🌍" },
-  { id: "emergency", label: "Emergency Contacts", icon: "🚓" },
+  { id: "welcome", label: "Welcome", icon: "" },
+  { id: "country", label: "Country", icon: "" },
+  { id: "emergency", label: "Emergency Contacts", icon: "" },
   { id: "response", label: "Response Teams", icon: "[PHONE]" },
-  { id: "done", label: "Complete", icon: "✅" },
+  { id: "done", label: "Complete", icon: "[OK]" },
 ];
 
 export function initSetupWizard(params = {}) {

@@ -54,7 +54,7 @@ export function initHelpScreen() {
           device SMS composer or phone dialer with a pre-filled message. A real
           emergency contact is still required to receive reports.</p>
         <p>To enable real, server-side SMS delivery, set these environment variables
-          (only on the server — credentials are never sent to the browser):</p>
+          (only on the server - credentials are never sent to the browser):</p>
         <pre style="font-size:12px; padding:8px; border:1px solid var(--border); border-radius:6px; margin:8px 0;">SMS_PROVIDER=twilio
 SMS_ACCOUNT_SID=your_twilio_sid
 SMS_AUTH_TOKEN=your_twilio_token

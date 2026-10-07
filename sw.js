@@ -1,4 +1,4 @@
-// LIFELINE AI — Service Worker (PWA, offline-first with Background Sync)
+// LIFELINE AI - Service Worker (PWA, offline-first with Background Sync)
 const CACHE_NAME = "lifeline-cache-v1";
 const SYNC_TAG = "lifeline-notification-sync";
 const ASSETS = [
@@ -87,7 +87,7 @@ self.addEventListener("fetch", (event) => {
         }
         return response;
       }).catch(() => {
-        return new Response("Offline — content not cached", { status: 503, statusText: "Service Unavailable" });
+        return new Response("Offline - content not cached", { status: 503, statusText: "Service Unavailable" });
       });
     })
   );
