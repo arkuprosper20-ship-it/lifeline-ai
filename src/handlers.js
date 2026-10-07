@@ -38,7 +38,12 @@ function setupGlobalListeners() {
         const newText = existing ? `${existing}\n\n${template}` : template;
         textarea.value = newText;
         store.setUI({ reportText: newText });
-        textarea.focus();
+        // Auto-advance to analysis
+        const analyzeBtn = document.getElementById("analyze-btn");
+        if (analyzeBtn) {
+          analyzeBtn.disabled = false;
+          startAnalysisFlow();
+        }
       }
     }
 
