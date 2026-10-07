@@ -9,10 +9,25 @@ export function initReportScreen() {
     <div class="report-screen">
       <div class="card">
         <h2 style="font-size:24px; margin-bottom:4px;">What's happening?</h2>
-        <p class="mu">Describe the situation or upload what you are seeing. Your report helps coordinate a response.</p>
+        <p class="mu">Describe the situation or tap a quick button below. Your report helps coordinate a response.</p>
       </div>
 
       <div class="card">
+        <div class="quick-actions" style="margin-bottom:12px;">
+          <h4 style="font-size:12px; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Quick Report</h4>
+          <div class="btn-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">
+            <button type="button" class="btn btn-secondary btn-sm quick-btn" data-quick="fire_smoke" style="grid-column:span 1;">[FIRE] Fire/Smoke</button>
+            <button type="button" class="btn btn-secondary btn-sm quick-btn" data-quick="medical" style="grid-column:span 1;">[HOSPITAL] Medical</button>
+            <button type="button" class="btn btn-secondary btn-sm quick-btn" data-quick="flooding" style="grid-column:span 1;">[FLOOD] Flooding</button>
+            <button type="button" class="btn btn-secondary btn-sm quick-btn" data-quick="road_hazard" style="grid-column:span 1;">[ROAD] Road Hazard</button>
+            <button type="button" class="btn btn-secondary btn-sm quick-btn" data-quick="power_hazard" style="grid-column:span 1;">[POWER] Power/Elec</button>
+            <button type="button" class="btn btn-secondary btn-sm quick-btn" data-quick="security" style="grid-column:span 1;">[WARN] Security</button>
+            <button type="button" class="btn btn-secondary btn-sm quick-btn" data-quick="missing_person" style="grid-column:span 1;">[SEARCH] Missing</button>
+            <button type="button" class="btn btn-secondary btn-sm quick-btn" data-quick="environmental" style="grid-column:span 1;">[BUILD] Structure</button>
+            <button type="button" class="btn btn-secondary btn-sm quick-btn" data-quick="community_assistance" style="grid-column:span 1;">[HELP] Assistance</button>
+          </div>
+        </div>
+
         <div class="formgroup">
           <label for="report-text">Describe what you observed</label>
           <textarea id="report-text" name="text" class="form-textarea form-input" placeholder="Describe what you saw: smoke, injuries, road blockage, location, time..." maxlength="${MAX_REPORT_LENGTH}" rows="5">${esc(state.ui.savedReportText || "")}</textarea>
