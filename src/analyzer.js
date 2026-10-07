@@ -2,29 +2,70 @@
 import { INCIDENT_TYPES, URGENCY_LEVELS } from "./types.js";
 
 const INCIDENT_KEYWORDS = {
-  fire_smoke: ["fire", "smoke", "flames", "burning", "embers", "blaze", "ash", "soot"],
-  medical: ["medical", "injured", "injury", "bleed", "bleeding", "unconscious", "dizzy", "pain", "hospital", "sick", "illness", "ache", "emergency", "hurt", "wound"],
-  flooding: ["flood", "flooding", "water", "storm", "rain", "drain", "sewer", "overflow", "drown", "inundation", "puddle", "standing water"],
-  road_hazard: ["road", "street", "blocked", "obstruction", "pothole", "debris", "accident", "collision", "traffic", "closure", "barrier", "construction"],
-  power_hazard: ["power", "electric", "outage", "blackout", "down", "pole", "wire", "sparking", "generator", "electrical", "shock"],
-  environmental: ["building", "structural", "collapse", "wall", "damage", "tree down", "landslide", "erosion", "hazard", "toxic", "chemical", "spill"],
-  security: ["security", "threat", "unsafe", "attack", "break-in", "break", "intrusion", "trespassing", "weapon", "violence", "assault", "crime", "theft", "stolen"],
-  missing_person: ["missing", "lost", "vanish", "disappear", "search", "found", "reunite", "separated", "alone", "child", "pet"],
-  community_assistance: ["help", "assist", "need", "request", "support", "volunteer", "community", "resource", "supply", "food", "water", "shelter"],
+  fire_smoke: ["fire", "smoke", "flames", "burning", "embers", "blaze", "ash", "soot", "structure fire", "house fire", "wildfire", "brush fire", "electrical fire", "grease fire"],
+  medical: ["medical", "injured", "injury", "bleed", "bleeding", "unconscious", "dizzy", "pain", "hospital", "sick", "illness", "ache", "emergency", "hurt", "wound", "heart attack", "stroke", "seizure", "choking", "overdose", "allergic", "difficulty breathing", "chest pain", "fall", "broken", "fracture", "trauma"],
+  flooding: ["flood", "flooding", "water", "storm", "rain", "drain", "sewer", "overflow", "drown", "inundation", "puddle", "standing water", "flash flood", "water rising", "basement flooded", "river overflow", "dam break"],
+  road_hazard: ["road", "street", "blocked", "obstruction", "pothole", "debris", "accident", "collision", "traffic", "closure", "barrier", "construction", "crash", "wreck", "pileup", "hit and run", "vehicle", "car", "truck", "motorcycle", "pedestrian", "lane closed", "downed tree", "landslide"],
+  power_hazard: ["power", "electric", "outage", "blackout", "down", "pole", "wire", "sparking", "generator", "electrical", "shock", "power line", "transformer", "arcing", "downed wire", "live wire", "no power", "lights out"],
+  environmental: ["building", "structural", "collapse", "wall", "damage", "tree down", "landslide", "erosion", "hazard", "toxic", "chemical", "spill", "gas leak", "hazmat", "contamination", "sinkhole", "crack", "foundation"],
+  security: ["security", "threat", "unsafe", "attack", "break-in", "break", "intrusion", "trespassing", "weapon", "violence", "assault", "crime", "theft", "stolen", "robbery", "burglary", "suspicious", "shots fired", "gun", "knife", "domestic", "fight"],
+  missing_person: ["missing", "lost", "vanish", "disappear", "search", "found", "reunite", "separated", "alone", "child", "pet", "runaway", "abducted", "wandered", "elderly", "dementia", "autism", "last seen"],
+  community_assistance: ["help", "assist", "need", "request", "support", "volunteer", "community", "resource", "supply", "food", "water", "shelter", "evacuation", "transport", "medical supplies", "blankets", "donations"],
   unknown: [],
 };
 
-const URGENT_KEYWORDS = ["urgent", "emergency", "asap", "danger", "life threatening", "life-threatening", "heavy smoke", "heavy fire"];
-const IMMEDIATE_KEYWORDS = ["immediate", "right now", "trapped", "stuck", "fallen", "collapse"];
-const VERIFY_KEYWORDS = ["maybe", "possibly", "might", "could", "possible", "sounds like", "report of", "appears", "looks like", "seems like"];
-const MONITOR_KEYWORDS = ["concerned", "worried", "keep an eye", "watch", "monitor", "check", "reported earlier"];
+const URGENT_KEYWORDS = ["urgent", "emergency", "asap", "danger", "life threatening", "life-threatening", "heavy smoke", "heavy fire", "911", "9-1-1", "code red", "mayday"];
+const IMMEDIATE_KEYWORDS = ["immediate", "right now", "trapped", "stuck", "fallen", "collapse", "now", "asap", "dying", "critical", "unresponsive"];
+const VERIFY_KEYWORDS = ["maybe", "possibly", "might", "could", "possible", "sounds like", "report of", "appears", "looks like", "seems like", "heard", "think", "might be"];
+const MONITOR_KEYWORDS = ["concerned", "worried", "keep an eye", "watch", "monitor", "check", "reported earlier", "saw earlier", "noticed"];
+
+// Common emergency shorthand and abbreviations
+const SHORTHAND_MAP = {
+  "mvcrash": "motor vehicle crash",
+  "mva": "motor vehicle accident",
+  "mvc": "motor vehicle collision",
+  "ped": "pedestrian",
+  "gsw": "gunshot wound",
+  "sob": "shortness of breath",
+  "cp": "chest pain",
+  "loc": "loss of consciousness",
+  "ambi": "ambulance",
+  "ems": "emergency medical services",
+  "fd": "fire department",
+  "pd": "police department",
+  "le": "law enforcement",
+  "rp": "reporting party",
+  "vic": "victim",
+  "subj": "subject",
+  "veh": "vehicle",
+  "entrap": "entrapment",
+  "extr": "extrication",
+  "hazmat": "hazardous materials",
+  "gas": "gas leak",
+  "elec": "electrical",
+  "struct": "structure",
+  "wild": "wildfire",
+  "brush": "brush fire",
+  "svc": "service",
+  "req": "request",
+  "resp": "response",
+  "enrt": "en route",
+  "os": "on scene",
+  "clr": "clear",
+  "uc": "under control",
+};
 
 const LOCATION_PATTERNS = [
   /\bnear\b\s+(.+?)(?:[.,;]|$)/i,
-  /\bat\s+(.+?)(?:[.,;]|$)/i,
-  /\bby\s+(.+?)(?:[.,;]|$)/i,
-  /\babove\s+(.+?)(?:[.,;]|$)/i,
-  /\bbelow\s+(.+?)(?:[.,;]|$)/i,
+  /\bat\b\s+(.+?)(?:[.,;]|$)/i,
+  /\bby\b\s+(.+?)(?:[.,;]|$)/i,
+  /\babove\b\s+(.+?)(?:[.,;]|$)/i,
+  /\bbelow\b\s+(.+?)(?:[.,;]|$)/i,
+  /\bon\b\s+(.+?\b(?:st|ave|rd|blvd|dr|ln|ct|pl|pkwy|hwy|rd|cir|way|ter|sq|byp|expy|fwy|turnpike)\b)(?:[.,;]|$)/i,
+  /\b(?:at|near|by|on)\s+(?:the\s+)?(?:corner\s+of\s+)?(.+?\s+(?:and|&)\s+.+?)(?:[.,;]|$)/i,
+  /\b(?:btwn|between)\s+(.+?)\s+(?:and|&)\s+(.+?)(?:[.,;]|$)/i,
+  /\b\d+\s+(?:st|ave|rd|blvd|dr|ln|ct|pl|pkwy|hwy|rd|cir|way|ter|sq|byp|expy|fwy|turnpike)\b/i,
+  /\b(?:mile\s+marker|mm|exit)\s+\d+/i,
 ];
 
 const TYPE_PRIORITY = {
@@ -39,6 +80,25 @@ const TYPE_PRIORITY = {
   community_assistance: 4,
   unknown: 5,
 };
+
+function expandShorthand(text) {
+  let expanded = text;
+  for (const [abbrev, full] of Object.entries(SHORTHAND_MAP)) {
+    const regex = new RegExp(`\\b${abbrev}\\b`, 'gi');
+    expanded = expanded.replace(regex, full);
+  }
+  return expanded;
+}
+
+function preprocessText(text) {
+  if (!text) return "";
+  let processed = text.toLowerCase().trim();
+  processed = expandShorthand(processed);
+  // Normalize common separators
+  processed = processed.replace(/[/\\|]/g, ' ');
+  processed = processed.replace(/\s+/g, ' ');
+  return processed;
+}
 
 const KEYWORDS_WITH_WEIGHT = {
   fire_smoke: { "heavy smoke": 2, smoke: 1, "smoke coming": 2, fire: 2, flames: 2, "on fire": 2, burning: 1, blaze: 2 },
@@ -61,10 +121,10 @@ function scoreType(text, keywords) {
 }
 
 export function classifyIncidentType(text) {
-  const lower = (text || "").toLowerCase();
+  const processed = preprocessText(text);
   const scores = {};
   for (const type of Object.keys(KEYWORDS_WITH_WEIGHT)) {
-    scores[type] = scoreType(lower, KEYWORDS_WITH_WEIGHT[type]);
+    scores[type] = scoreType(processed, KEYWORDS_WITH_WEIGHT[type]);
   }
   scores["unknown"] = 0;
   const best = Object.entries(scores)
@@ -78,30 +138,32 @@ export function classifyIncidentType(text) {
 }
 
 export function assessUrgency(text) {
-  const lower = (text || "").toLowerCase();
-  if (IMMEDIATE_KEYWORDS.some(kw => lower.includes(kw)) || ["fire", "flames", "burning", "unconscious", "bleed", "injured", "collapse"].some(kw => lower.includes(kw))) return "immediate";
-  if (URGENT_KEYWORDS.some(kw => lower.includes(kw))) return "urgent";
-  if (VERIFY_KEYWORDS.some(kw => lower.includes(kw))) return "verify";
-  if (MONITOR_KEYWORDS.some(kw => lower.includes(kw))) return "monitor";
+  const processed = preprocessText(text);
+  if (IMMEDIATE_KEYWORDS.some(kw => processed.includes(kw)) || ["fire", "flames", "burning", "unconscious", "bleed", "injured", "collapse", "trapped", "dying", "critical", "unresponsive"].some(kw => processed.includes(kw))) return "immediate";
+  if (URGENT_KEYWORDS.some(kw => processed.includes(kw))) return "urgent";
+  if (VERIFY_KEYWORDS.some(kw => processed.includes(kw))) return "verify";
+  if (MONITOR_KEYWORDS.some(kw => processed.includes(kw))) return "monitor";
   return "information";
 }
 
 export function extractObservations(text) {
-  const lower = (text || "").toLowerCase();
+  const processed = preprocessText(text);
   const observations = [];
   const obsPatterns = [
     { keywords: ["smoke", "smoke"], label: "Smoke visible" },
     { keywords: ["fire", "flames", "burning", "blaze"], label: "Fire/flames visible" },
-    { keywords: ["building"], label: "Building visible" },
-    { keywords: ["road", "street"], label: "Road referenced" },
+    { keywords: ["building", "structure", "house", "home"], label: "Building visible" },
+    { keywords: ["road", "street", "highway", "ave", "blvd", "drive"], label: "Road referenced" },
     { keywords: ["water", "flood", "flooding"], label: "Water/flooding visible" },
-    { keywords: ["injured", "hurt", "bleeding", "unconscious"], label: "Injury reported" },
-    { keywords: ["power", "electrical", "wire"], label: "Electrical hazard mentioned" },
-    { keywords: ["tree"], label: "Tree/vegetation hazard mentioned" },
-    { keywords: ["block", "obstruction", "blocked", "debris"], label: "Obstruction mentioned" },
+    { keywords: ["injured", "hurt", "bleeding", "unconscious", "hurt", "wound"], label: "Injury reported" },
+    { keywords: ["power", "electrical", "wire", "transformer", "pole"], label: "Electrical hazard mentioned" },
+    { keywords: ["tree", "branch", "limb"], label: "Tree/vegetation hazard mentioned" },
+    { keywords: ["block", "obstruction", "blocked", "debris", "pileup", "wreck"], label: "Obstruction mentioned" },
+    { keywords: ["gas", "leak", "hazmat", "chemical", "toxic", "spill"], label: "Hazmat/Chemical mentioned" },
+    { keywords: ["weapon", "gun", "knife", "shots", "shooting"], label: "Weapon mentioned" },
   ];
   for (const pattern of obsPatterns) {
-    if (pattern.keywords.some(kw => lower.includes(kw))) {
+    if (pattern.keywords.some(kw => processed.includes(kw))) {
       observations.push({ label: pattern.label, present: true });
     } else {
       observations.push({ label: pattern.label, present: false });
@@ -112,8 +174,9 @@ export function extractObservations(text) {
 
 export function extractLocationFromText(text) {
   if (!text) return null;
+  const processed = preprocessText(text);
   for (const pattern of LOCATION_PATTERNS) {
-    const match = text.match(pattern);
+    const match = processed.match(pattern);
     if (match && match[1]) {
       let desc = match[1].trim().replace(/^(?:the|a|an)\s+/i, "");
       return { description: desc, source: "text" };
@@ -124,17 +187,17 @@ export function extractLocationFromText(text) {
 
 export function detectMissingInfo(text, observations) {
   const missing = [];
-  const lower = (text || "").toLowerCase();
-  if (!lower.includes("where") && !lower.includes("at ") && !lower.includes("near ") && !lower.includes("location")) {
+  const processed = preprocessText(text);
+  if (!processed.includes("where") && !processed.includes("at ") && !processed.includes("near ") && !processed.includes("location") && !processed.includes("address")) {
     missing.push("Exact location or address");
   }
-  if (!lower.includes("people") && !lower.includes("person") && !lower.includes("injured") && !lower.includes("anyone")) {
+  if (!processed.includes("people") && !processed.includes("person") && !processed.includes("injured") && !processed.includes("anyone") && !processed.includes("victim") && !processed.includes("patient")) {
     missing.push("Number of people affected");
   }
-  if (!/cause|because|due to|reason/i.test(lower)) {
+  if (!/cause|because|due to|reason/i.test(processed)) {
     missing.push("Known cause or origin");
   }
-  if (!/time|when|at \d|current|now/i.test(lower)) {
+  if (!/time|when|at \d|current|now|ago/i.test(processed)) {
     missing.push("Time of occurrence");
   }
   return missing;
@@ -188,11 +251,12 @@ export async function getAIAnalysis(text, imageDataUrl, options = {}) {
 }
 
 export function localAnalysis(text) {
-  const type = classifyIncidentType(text || "");
-  const urgency = assessUrgency(text || "");
-  const observations = extractObservations(text || "").filter(o => o.present);
-  const missing = detectMissingInfo(text || "");
-  const location = extractLocationFromText(text || "");
+  const processed = preprocessText(text);
+  const type = classifyIncidentType(processed);
+  const urgency = assessUrgency(processed);
+  const observations = extractObservations(processed).filter(o => o.present);
+  const missing = detectMissingInfo(processed);
+  const location = extractLocationFromText(processed);
   const typeLabel = INCIDENT_TYPES.find(t => t.id === type)?.label || "Unknown incident";
   return {
     isIncident: type !== "unknown" || observations.length > 0,
