@@ -1,4 +1,4 @@
-// LIFELINE AI — Voice input utilities
+// LIFELINE AI - Voice recording and speech recognition
 let mediaRecorder = null;
 let audioChunks = [];
 let stream = null;

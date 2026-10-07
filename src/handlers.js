@@ -1,4 +1,4 @@
-// LIFELINE AI — Global event handlers and UI wiring
+// LIFELINE AI - Global event handlers
 import { getState, store } from "./store.js";
 import { startAnalysisFlow } from "./flows/analyze.js";
 

@@ -1,4 +1,4 @@
-// LIFELINE AI — IndexedDB storage layer
+// LIFELINE AI - IndexedDB storage layer
 // Replaces localStorage for larger payloads (images, audio, audit logs)
 // Falls back to localStorage when IndexedDB is unavailable
 

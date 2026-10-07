@@ -1,4 +1,4 @@
-// LIFELINE AI — API handler (Node.js serverless function)
+// LIFELINE AI - Notification API handler
 // Handles notification delivery: SMS, email, webhook, telephony
 //
 // IMPORTANT: Twilio is OPTIONAL. The function loads the Twilio SDK lazily
@@ -243,7 +243,7 @@ async function sendWebhook(contact, pkg) {
     try {
       data = await response.json();
     } catch {
-      // 204 / non-json body — treat as accepted
+       - treat as accepted
     }
     return {
       provider: "webhook",

@@ -1,4 +1,4 @@
-// LIFELINE AI — Setup walkthrough wizard
+// LIFELINE AI - Setup wizard screen
 import { getState, store } from "../store.js";
 import { getContacts, saveContacts } from "../contacts.js";
 import { getEmergencyContactsForCountry, discoverEmergencyContacts, getRecommendedEmergencyContact } from "../emergency-contacts.js";
@@ -9,7 +9,7 @@ const SETUP_STEPS = [
   { id: "welcome", label: "Welcome", icon: "👋" },
   { id: "country", label: "Country", icon: "🌍" },
   { id: "emergency", label: "Emergency Contacts", icon: "🚓" },
-  { id: "response", label: "Response Teams", icon: "📞" },
+  { id: "response", label: "Response Teams", icon: "[PHONE]" },
   { id: "done", label: "Complete", icon: "✅" },
 ];
 
@@ -19,7 +19,7 @@ export function initSetupWizard(params = {}) {
 
   const steps = SETUP_STEPS.map(s => `
     <div class="step-indicator ${s.id === step ? "complete" : s.id === "welcome" && step !== "welcome" ? "complete" : ""}" style="display:inline-block; width:32px; height:32px; border-radius:50%; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; margin-right:8px; font-size:14px;">
-      ${step !== s.id && SETUP_STEPS.findIndex(ss => ss.id === step) > SETUP_STEPS.findIndex(ss => ss.id === s.id) ? "✓" : s.icon}
+      ${step !== s.id && SETUP_STEPS.findIndex(ss => ss.id === step) > SETUP_STEPS.findIndex(ss => ss.id === s.id) ? "[OK]" : s.icon}
     </div>
   `).join("");
 
@@ -115,7 +115,7 @@ function renderStep(step, state) {
       const enabledContacts = contacts.filter(c => c.enabled);
       const responseTeams = RESPONSE_CATEGORIES.map(cat => {
         const contact = contacts.find(c => c.category === cat);
-        const incident = INCIDENT_TYPES.find(t => t.id === cat.replace("_response", "")) || { id: cat, label: cat, icon: "📋" };
+        const incident = INCIDENT_TYPES.find(t => t.id === cat.replace("_response", "")) || { id: cat, label: cat, icon: "[LIST]" };
         return `
           <div style="padding:8px; border-bottom:1px solid var(--border);">
             <div style="font-weight:600;">${esc(incident.label || cat)}</div>
@@ -143,9 +143,9 @@ function renderStep(step, state) {
           <h3>Setup Complete!</h3>
           <p class="mu">LIFELINE is now configured for your region.</p>
           <ul style="list-style:none; padding-left:0; margin-top:12px;">
-            <li style="padding:4px 0;">✓ Emergency contacts configured</li>
-            <li style="padding:4px 0;">✓ Response teams assigned</li>
-            <li style="padding:4px 0;">✓ Ready for incidents</li>
+            <li style="padding:4px 0;">[OK] Emergency contacts configured</li>
+            <li style="padding:4px 0;">[OK] Response teams assigned</li>
+            <li style="padding:4px 0;">[OK] Ready for incidents</li>
           </ul>
           <div class="btn-row" style="margin-top:16px;">
             <button class="btn btn-secondary" data-action="setup-step" data-step="response">Back</button>

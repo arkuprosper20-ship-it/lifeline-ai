@@ -1,4 +1,4 @@
-// LIFELINE AI — Coordination dashboard (admin view)
+// LIFELINE AI - Coordination dashboard
 import { getState, store } from "../store.js";
 import { getEnabledContacts, getRecommendedContact } from "../contacts.js";
 import { createLocationLink } from "../location.js";
@@ -27,7 +27,7 @@ export function initCoordinationScreen() {
         </div>
         <p class="mu" style="margin-bottom:4px;">Community incident coordination dashboard.</p>
         <div class="text-small text-muted">
-          ${getState().isOnline ? "● Online" : "○ Offline mode"}
+          ${getState().isOnline ? "● Online" : "[o] Offline mode"}
         </div>
       </div>
 
@@ -64,7 +64,7 @@ export function initCoordinationScreen() {
             }
             return `
               <div style="margin-bottom:8px;">
-                Total tracked: ${stats.total} · Breached: ${stats.breached} · Warning: ${stats.warning}
+                Total tracked: ${stats.total} . Breached: ${stats.breached} . Warning: ${stats.warning}
               </div>
               ${slaIncidents.slice(0, 5).map((s) => `
                 <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border);">
@@ -96,7 +96,7 @@ export function initCoordinationScreen() {
             <div class="incident-item">
               <div class="incident-text">
                 <div class="incident-title">${esc(c.name)}</div>
-                <div class="incident-meta">${esc(c.category)} · ${esc(c.phone || "no phone")}</div>
+                <div class="incident-meta">${esc(c.category)} . ${esc(c.phone || "no phone")}</div>
               </div>
               <span class="badge badge-ready">ENABLED</span>
             </div>
@@ -107,14 +107,14 @@ export function initCoordinationScreen() {
       <div class="card">
         <h3>Recent escalations</h3>
         ${recentEscalations.length > 0 ? recentEscalations.map(incident => {
-          const typeInfo = INCIDENT_TYPES.find(t => t.id === incident.type) || { label: incident.type, icon: "📋" };
+          const typeInfo = INCIDENT_TYPES.find(t => t.id === incident.type) || { label: incident.type, icon: "[LIST]" };
           return `
             <div class="incident-item">
               <span class="incident-type-icon">${typeInfo.icon}</span>
               <div class="incident-text">
                 <div class="incident-title">${esc(incident.id)} — ${esc(typeInfo.label)}</div>
                 <div class="incident-meta">
-                  Escalation: ${esc(getStatusLabel(incident.status))} · ${formatTimeAgo(incident.lastEscalation.at)}
+                  Escalation: ${esc(getStatusLabel(incident.status))} . ${formatTimeAgo(incident.lastEscalation.at)}
                 </div>
               </div>
                  ${incident.lastEscalation && incident.lastEscalation.status === "SENT" ? `<span class="badge badge-ready">SMS sent</span>` : incident.lastEscalation && incident.lastEscalation.status === "COMPOSER_OPENED" ? `<span class="badge badge-warning">SMS composer opened</span>` : incident.lastEscalation ? `<span class="badge badge-monitor">${esc(incident.lastEscalation.status)}</span>` : ""}
@@ -127,7 +127,7 @@ export function initCoordinationScreen() {
         <h3>AI system health</h3>
         <div style="font-size:13px; color:var(--text-secondary); line-height:1.8;">
           <div>Local rules engine: ● ONLINE</div>
-          <div>Groq Cloud AI: ${getState().settings.mode === "local" || getState().settings.mode === "rules" ? "○ DISABLED" : getState().isOnline ? "● CHECKING..." : "○ UNAVAILABLE (offline)"}</div>
+          <div>Groq Cloud AI: ${getState().settings.mode === "local" || getState().settings.mode === "rules" ? "[o] DISABLED" : getState().isOnline ? "● CHECKING..." : "[o] UNAVAILABLE (offline)"}</div>
           <div>Offline sync queue: ${getState().syncQueue?.length || 0} pending</div>
         </div>
       </div>

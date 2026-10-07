@@ -1,4 +1,4 @@
-// LIFELINE AI — UI helper utilities
+// LIFELINE AI - UI helper utilities
 export function renderComponent(container, renderFn) {
   if (typeof renderFn === "function") {
     const result = renderFn();

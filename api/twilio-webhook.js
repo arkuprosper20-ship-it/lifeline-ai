@@ -1,4 +1,4 @@
-// LIFELINE AI — Twilio Status Callback Webhook
+// LIFELINE AI - Twilio webhook handler
 // Receives delivery receipts and updates incident status
 // Configure in Twilio Console: Messaging > Settings > Status Callback URL
 

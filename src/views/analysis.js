@@ -1,4 +1,4 @@
-// LIFELINE AI — Analysis screen (AI processing view)
+// LIFELINE AI - Analysis screen (AI processing view)
 import { getState, store } from "../store.js";
 import { esc } from "../ui.js";
 
@@ -65,7 +65,7 @@ function getProgressSteps(isAnalyzing, analysisResult) {
   if (isAnalyzing) {
     return steps.map((step, i) => `
       <div class="progress-step">
-        <div class="step-indicator ${step.complete ? "complete" : "active"}">${step.complete ? "✓" : "◉"}</div>
+        <div class="step-indicator ${step.complete ? "complete" : "active"}">${step.complete ? "[OK]" : "[*]"}</div>
         <div class="step-label">${step.label}</div>
         <div class="step-status">
           ${i === steps.findIndex(s => !s.complete) ? 'RUNNING' : step.complete ? 'COMPLETE' : 'WAITING'}
@@ -76,7 +76,7 @@ function getProgressSteps(isAnalyzing, analysisResult) {
 
   return steps.map((step) => `
     <div class="progress-step">
-      <div class="step-indicator ${step.complete ? "complete" : "pending"}">${step.complete ? "✓" : "○"}</div>
+      <div class="step-indicator ${step.complete ? "complete" : "pending"}">${step.complete ? "[OK]" : "[o]"}</div>
       <div class="step-label">${step.label}</div>
       <div class="step-status">${step.complete ? "COMPLETE" : "PENDING"}</div>
     </div>

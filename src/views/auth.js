@@ -1,4 +1,4 @@
-// LIFELINE AI — Auth screen
+// LIFELINE AI - Auth screen
 import { getProviderMode, localAuth } from "../auth.js";
 import { esc } from "../ui.js";
 

@@ -142,10 +142,10 @@ function initMobileNav() {
   nav.className = "bottom-nav";
   const current = getCurrentView();
   nav.innerHTML = `
-    <div class="nav-item ${mobileNavViews.includes(current) && current === "report" ? "active" : ""}" data-view="report">📝<br>Report</div>
-    <div class="nav-item ${mobileNavViews.includes(current) && current === "map" ? "active" : ""}" data-view="map">🗺<br>Map</div>
-    <div class="nav-item ${mobileNavViews.includes(current) && current === "history" ? "active" : ""}" data-view="history">📜<br>History</div>
-    <div class="nav-item ${mobileNavViews.includes(current) && current === "settings" ? "active" : ""}" data-view="settings">⚙<br>Settings</div>
+    <div class="nav-item ${mobileNavViews.includes(current) && current === "report" ? "active" : ""}" data-view="report">[REPORT]<br>Report</div>
+    <div class="nav-item ${mobileNavViews.includes(current) && current === "map" ? "active" : ""}" data-view="map">[MAP]<br>Map</div>
+    <div class="nav-item ${mobileNavViews.includes(current) && current === "history" ? "active" : ""}" data-view="history">[HISTORY]<br>History</div>
+    <div class="nav-item ${mobileNavViews.includes(current) && current === "settings" ? "active" : ""}" data-view="settings">[SETTINGS]<br>Settings</div>
   `;
   document.body.appendChild(nav);
   nav.addEventListener("click", (e) => {

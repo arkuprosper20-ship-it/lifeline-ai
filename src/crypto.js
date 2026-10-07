@@ -1,4 +1,4 @@
-// LIFELINE AI — End-to-end encryption for incident payloads
+// LIFELINE AI - Encryption utilities
 // Uses Web Crypto API (SubtleCrypto) for AES-GCM encryption
 // Keys are derived from user passphrase using PBKDF2
 // Never stores keys in plaintext; never sends keys over network

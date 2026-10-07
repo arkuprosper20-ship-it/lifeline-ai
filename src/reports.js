@@ -1,4 +1,4 @@
-// LIFELINE AI — After-action report generation
+// LIFELINE AI - After-action report generation
 // Generates structured incident reports in multiple formats (JSON, text, markdown)
 
 import { createIncidentId, formatDate, formatTimestamp } from "./types.js";
@@ -49,7 +49,7 @@ function buildTimeline(incident) {
     timeline.push({
       at: incident.timestamp,
       label: "Incident reported",
-      icon: "📝",
+      icon: "[REPORT]",
       details: `Reported via ${incident.source || "app"}`,
     });
   }
@@ -57,7 +57,7 @@ function buildTimeline(incident) {
     timeline.push({
       at: incident.location.timestamp,
       label: "Location captured",
-      icon: "📍",
+      icon: "[LOC]",
       details: `${incident.location.sourceLabel || incident.location.source}`,
     });
   }
@@ -72,7 +72,7 @@ function buildTimeline(incident) {
       timeline.push({
         at: incident.lastEscalation.at + 10000,
         label: "Response delivered",
-        icon: "✓",
+        icon: "[OK]",
         details: `Delivered via ${incident.lastEscalation.method}`,
       });
     }
@@ -100,7 +100,7 @@ function buildTimeline(incident) {
     timeline.push({
       at: entry.at || entry.timestamp,
       label: entry.action,
-      icon: "📋",
+      icon: "[LIST]",
       details: entry.details || entry.note || "",
     });
   });

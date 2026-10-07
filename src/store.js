@@ -1,4 +1,4 @@
-// LIFELINE AI — State Manager
+// LIFELINE AI - State Manager
 import { STORAGE_KEYS, createIncidentId, INCIDENT_TYPES } from "./types.js";
 import { getDefaultContacts as DEFAULT_CONTACTS } from "./contacts.js";
 import { initDB, dbGet, dbPut, dbGetAll, dbDelete, dbClear, dbCount, migrateFromLocalStorage, STORES } from "./indexeddb.js";

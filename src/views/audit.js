@@ -1,4 +1,4 @@
-// LIFELINE AI — Audit log view
+// LIFELINE AI - Audit log screen
 import { getState } from "../store.js";
 import { esc, formatTimeAgo } from "../ui.js";
 
@@ -38,14 +38,14 @@ export function initAuditScreen() {
             <div class="incident-text">
               <div class="incident-title">${esc(event.message)}</div>
               <div class="incident-meta">
-                ${formatTimeAgo(event.ts)} · ${esc(event.type)}
-                ${event.incidentId ? `· ${esc(event.incidentId)}` : ""}
+                ${formatTimeAgo(event.ts)} . ${esc(event.type)}
+                ${event.incidentId ? `. ${esc(event.incidentId)}` : ""}
               </div>
             </div>
           </div>
         `).join('') : `
           <div class="card text-center" style="padding:40px 20px;">
-            <div style="font-size:48px; margin-bottom:12px;">📋</div>
+            <div style="font-size:48px; margin-bottom:12px;">[LIST]</div>
             <h3>No audit events</h3>
             <p class="mu">Events will appear here as incidents are created and managed.</p>
           </div>

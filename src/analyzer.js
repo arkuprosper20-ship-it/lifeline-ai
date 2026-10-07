@@ -1,4 +1,4 @@
-// LIFELINE AI — Incident Analysis Engine (local fallback + AI router)
+// LIFELINE AI - Incident Analysis Engine (local fallback + AI router)
 import { INCIDENT_TYPES, URGENCY_LEVELS } from "./types.js";
 
 const INCIDENT_KEYWORDS = {

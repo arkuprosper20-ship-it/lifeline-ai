@@ -1,4 +1,4 @@
-// LIFELINE AI — About screen
+// LIFELINE AI - About screen
 import { getState } from "../store.js";
 
 export function initAboutScreen() {
@@ -27,16 +27,16 @@ export function initAboutScreen() {
       <div class="card">
         <h3>Key Features</h3>
         <ul style="list-style:none; padding-left:0; line-height:1.8;">
-          <li>✓ Multimodal reporting (text, voice, image)</li>
-          <li>✓ Current location capture with consent</li>
-          <li>✓ AI-powered incident classification</li>
-          <li>✓ Urgency assessment with safety rules</li>
-          <li>✓ Smart escalation routing</li>
-          <li>✓ Contact directory configuration</li>
-          <li>✓ Community incident map</li>
-          <li>✓ Incident clustering</li>
-          <li>✓ Offline-first architecture</li>
-          <li>✓ Progressive Web App</li>
+          <li>[OK] Multimodal reporting (text, voice, image)</li>
+          <li>[OK] Current location capture with consent</li>
+          <li>[OK] AI-powered incident classification</li>
+          <li>[OK] Urgency assessment with safety rules</li>
+          <li>[OK] Smart escalation routing</li>
+          <li>[OK] Contact directory configuration</li>
+          <li>[OK] Community incident map</li>
+          <li>[OK] Incident clustering</li>
+          <li>[OK] Offline-first architecture</li>
+          <li>[OK] Progressive Web App</li>
         </ul>
       </div>
 

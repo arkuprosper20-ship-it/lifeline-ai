@@ -1,4 +1,4 @@
-// LIFELINE AI — Confirmation screen
+// LIFELINE AI - Confirmation screen
 import { getState, store } from "../store.js";
 import { getRecommendedContact, buildIncidentPackage } from "../contacts.js";
 import { getRecommendedEmergencyContact } from "../emergency-contacts.js";
@@ -25,7 +25,7 @@ export function initConfirmScreen(params = {}) {
     : state.ui.selectedIncident || state.incidents[0];
   if (!incident) return '<div class="card"><p>No incident found.</p></div>';
 
-  const typeInfo = INCIDENT_TYPES.find((t) => t.id === incident.type) || { label: "Unknown", icon: "❓", color: "type-other" };
+  const typeInfo = INCIDENT_TYPES.find((t) => t.id === incident.type) || { label: "Unknown", icon: "[?]", color: "type-other" };
   const countryCode = state.settings.countryCode || "US";
   const emergencyContact = getRecommendedEmergencyContact(incident.type, countryCode);
   const contact = state.contacts.find((c) => c.id === (state.ui.selectedContact || params.contact))
@@ -64,13 +64,13 @@ export function initConfirmScreen(params = {}) {
       <div class="card">
         <h3>Information to be shared</h3>
         <ul style="list-style:none; padding-left:0;">
-          <li style="padding:4px 0;">✓ Incident summary</li>
-          <li style="padding:4px 0;">✓ Category: ${esc(typeInfo.label)}</li>
-          <li style="padding:4px 0;">✓ Urgency: ${esc((incident.urgency || "urgent").toUpperCase())}</li>
-          <li style="padding:4px 0;">✓ Location</li>
-          <li style="padding:4px 0;">✓ Location accuracy</li>
-          <li style="padding:4px 0;">✓ Map link</li>
-          <li style="padding:4px 0;">✓ Timestamp</li>
+          <li style="padding:4px 0;">[OK] Incident summary</li>
+          <li style="padding:4px 0;">[OK] Category: ${esc(typeInfo.label)}</li>
+          <li style="padding:4px 0;">[OK] Urgency: ${esc((incident.urgency || "urgent").toUpperCase())}</li>
+          <li style="padding:4px 0;">[OK] Location</li>
+          <li style="padding:4px 0;">[OK] Location accuracy</li>
+          <li style="padding:4px 0;">[OK] Map link</li>
+          <li style="padding:4px 0;">[OK] Timestamp</li>
         </ul>
       </div>
 
@@ -88,7 +88,7 @@ export function initConfirmScreen(params = {}) {
         <h4>Observations</h4>
         ${incident.observations?.length ? `
           <ul style="list-style:none; padding-left:0;">
-            ${incident.observations.map((o) => `<li style="padding:4px 0;">✓ ${esc(o)}</li>`).join("")}
+            ${incident.observations.map((o) => `<li style="padding:4px 0;">[OK] ${esc(o)}</li>`).join("")}
           </ul>
         ` : '<p class="mu">No observations.</p>'}
       </div>
@@ -98,7 +98,7 @@ export function initConfirmScreen(params = {}) {
         ${incident.location && incident.location.latitude !== undefined ? `
           <p><b>Latitude:</b> ${incident.location.latitude.toFixed(6)}</p>
           <p><b>Longitude:</b> ${incident.location.longitude.toFixed(6)}</p>
-          <p><b>Accuracy:</b> ${incident.location.accuracy ? `±${Math.round(incident.location.accuracy)}m` : "Unknown"}</p>
+          <p><b>Accuracy:</b> ${incident.location.accuracy ? `+/-${Math.round(incident.location.accuracy)}m` : "Unknown"}</p>
           <p><b>Type:</b> ${esc(incident.location.sourceLabel || incident.location.source)}</p>
           <a href="${pkg.mapLink}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">OPEN MAP</a>
         ` : '<p class="mu">No location captured.</p>'}

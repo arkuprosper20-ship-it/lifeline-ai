@@ -1,4 +1,4 @@
-// LIFELINE AI — Map helpers (pure, unit-testable, no DOM dependencies)
+// LIFELINE AI - Map helpers and utilities
 import {
   INCIDENT_TYPES,
   INCIDENT_STATUS_LABELS,
@@ -241,7 +241,7 @@ export function incidentDetailFields(incident) {
     { label: "STATUS", value: statusInfo.label },
     { label: "REPORTED", value: incident.timestamp ? `${formatDate(incident.timestamp)} ${formatTimestamp(incident.timestamp)}` : "—" },
     { label: "LOCATION", value: l.description || (coordsOk ? `${Number(l.latitude).toFixed(6)}, ${Number(l.longitude).toFixed(6)}` : "Not provided") },
-    { label: "ACCURACY", value: l.accuracy ? `±${Math.round(l.accuracy)}m — ${getAccuracyLabel(l.accuracy)}` : "Unknown" },
+    { label: "ACCURACY", value: l.accuracy ? `+/-${Math.round(l.accuracy)}m — ${getAccuracyLabel(l.accuracy)}` : "Unknown" },
     { label: "SOURCE", value: l.sourceLabel || LOCATION_SOURCE_LABEL[l.source] || l.source || "Unknown" },
     { label: "AI/FALLBACK ANALYSIS", value: incident.provider ? `${incident.provider}${incident.fallbackFrom ? " (fallback)" : ""}` : "—" },
     { label: "RECOMMENDED RESPONSE", value: incident.recoContact?.name || incident.responseLabel || "—" },

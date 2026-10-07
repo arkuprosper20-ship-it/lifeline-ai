@@ -1,4 +1,4 @@
-// LIFELINE AI — WebSocket real-time sync
+// LIFELINE AI - WebSocket real-time sync
 // Replaces polling with bidirectional WebSocket connection for
 // live coordination dashboard updates and incident synchronization.
 

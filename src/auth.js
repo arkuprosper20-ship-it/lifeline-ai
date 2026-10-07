@@ -1,4 +1,4 @@
-// LIFELINE AI — Auth provider (local + Firebase)
+// LIFELINE AI - Auth screen
 import { getState, store } from "./store.js";
 import { FIREBASE_CONFIG } from "./firebase-config.js";
 

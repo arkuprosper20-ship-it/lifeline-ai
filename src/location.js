@@ -1,4 +1,4 @@
-// LIFELINE AI — Location and geolocation utilities
+// LIFELINE AI - Location and geolocation utilities
 import { LOCATION_SOURCES, classNames } from "./types.js";
 
 let permissionState = "unknowing";

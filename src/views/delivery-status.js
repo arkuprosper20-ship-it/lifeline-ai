@@ -1,4 +1,4 @@
-// LIFELINE AI — Delivery status screen
+// LIFELINE AI - Delivery status screen
 import { getState, store } from "../store.js";
 import { buildIncidentPackage, getRecommendedContact } from "../contacts.js";
 import {
@@ -40,7 +40,7 @@ export function initDeliveryStatus(params = {}) {
     : state.ui.selectedIncident || state.incidents[0];
   if (!incident) return '<div class="card"><p>No incident found.</p></div>';
 
-  const typeInfo = INCIDENT_TYPES.find((t) => t.id === incident.type) || { label: "Unknown", icon: "❓" };
+  const typeInfo = INCIDENT_TYPES.find((t) => t.id === incident.type) || { label: "Unknown", icon: "[?]" };
   const pkg = buildIncidentPackage(incident);
   const escalation = incident.lastEscalation;
   const hasConfig = !!state.notificationConfig;
@@ -70,7 +70,7 @@ export function initDeliveryStatus(params = {}) {
       <div class="card">
         <h2>Delivery status</h2>
         <p class="mu">LIFELINE ${esc(incident.id)}</p>
-        <span class="text-small" style="color:var(--text-tertiary);">${isOnline ? "● Online" : "○ Offline"}</span>
+        <span class="text-small" style="color:var(--text-tertiary);">${isOnline ? "● Online" : "[o] Offline"}</span>
       </div>
 
       <div class="card">
@@ -92,12 +92,12 @@ export function initDeliveryStatus(params = {}) {
 
         <div class="progress-steps">
           <div class="progress-step">
-            <div class="step-indicator complete">✓</div>
+            <div class="step-indicator complete">[OK]</div>
             <div class="step-label">Incident package created</div>
             <div class="step-status">COMPLETE</div>
           </div>
           <div class="progress-step">
-            <div class="step-indicator complete">✓</div>
+            <div class="step-indicator complete">[OK]</div>
             <div class="step-label">Location link generated</div>
             <div class="step-status">COMPLETE</div>
           </div>
@@ -111,15 +111,15 @@ export function initDeliveryStatus(params = {}) {
 
         ${provider === "device-sms" ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
-          ⚠ SMS composer opens via the button below. LIFELINE cannot confirm delivery — it is handled by your device and carrier.
+          [WARN] SMS composer opens via the button below. LIFELINE cannot confirm delivery — it is handled by your device and carrier.
         </div>` : ""}
         ${provider === "phone" ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
-          ⚠ Phone dialer opens via the button below. LIFELINE cannot confirm the call was completed — handled by your device.
+          [WARN] Phone dialer opens via the button below. LIFELINE cannot confirm the call was completed — handled by your device.
         </div>` : ""}
         ${provider === "demo" ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
-          🧪 DEMO MODE: no real communication was sent. This is a simulated demonstration.
+          [TEST] DEMO MODE: no real communication was sent. This is a simulated demonstration.
         </div>` : ""}
         ${provider === "twilio" && !delivered ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
@@ -127,7 +127,7 @@ export function initDeliveryStatus(params = {}) {
         </div>` : ""}
         ${!hasConfig && !isOnline && providerRequiresOnline(provider) ? `
         <div class="warning-note" style="font-size:12px; line-height:1.6;">
-          ⚠ You are offline. The notification is queued and will send when the connection returns.
+          [WARN] You are offline. The notification is queued and will send when the connection returns.
         </div>` : ""}
         ${note ? `<p class="mu text-small" style="margin-top:8px;">${esc(note)}</p>` : ""}
 
@@ -148,7 +148,7 @@ export function initDeliveryStatus(params = {}) {
         </div>
         ${error ? `
         <div class="warning-note" style="margin-top:8px; font-size:12px;">
-          ⚠ ${esc(error)}
+          [WARN] ${esc(error)}
           <button class="btn btn-secondary btn-sm" data-action="retry-channel" data-id="${incident.id}" data-channel="${provider}" style="margin-top:8px;">Retry</button>
         </div>` : ""}
       </div>
@@ -171,7 +171,7 @@ export function initDeliveryStatus(params = {}) {
 }
 
 function channelStep(label, status, done) {
-  const indicator = !done ? "○" : status === "FAILED" ? "✗" : "✓";
+  const indicator = !done ? "[o]" : status === "FAILED" ? "✗" : "[OK]";
   const cls = !done ? "pending" : status === "FAILED" ? "" : "complete";
   const show = status && status !== "—" ? status : "—";
   return `
@@ -263,7 +263,7 @@ function startTwilioStatusPolling(messageId, incidentId) {
       const status = data.status || "UNKNOWN";
       const delivered = data.delivered === true;
 
-      statusEl.innerHTML = `<b>Status:</b> ${status} ${delivered ? "✓ Delivered" : ""}`;
+      statusEl.innerHTML = `<b>Status:</b> ${status} ${delivered ? "[OK] Delivered" : ""}`;
 
       if (delivered || ["DELIVERED", "FAILED", "UNDELIVERED"].includes(status)) {
         const state = getState();

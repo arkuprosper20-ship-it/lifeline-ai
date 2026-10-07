@@ -1,4 +1,4 @@
-// LIFELINE AI — Contact directory admin view
+// LIFELINE AI - Contacts admin screen
 import { getState, store } from "../store.js";
 import { saveContacts, resetToDefaultContacts } from "../contacts.js";
 import { esc, showToast } from "../ui.js";

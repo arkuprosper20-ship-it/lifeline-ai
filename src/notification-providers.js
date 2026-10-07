@@ -1,4 +1,4 @@
-// LIFELINE AI — Notification provider abstraction
+// LIFELINE AI - Notification provider abstraction
 //
 // Twilio is OPTIONAL. The application ships without any SMS API credentials
 // and works out of the box using device-SMS / phone-link fallbacks. When a
@@ -8,7 +8,7 @@
 //            EmailProvider, WebhookProvider, DemoProvider
 //
 // Runtime config is fetched once from GET /api/notify and stored in
-// state.notificationConfig. It contains NO secrets — only booleans.
+// LIFELINE AI - 
 import { createLocationLink } from "./location.js";
 
 export const NOTIFICATION_STATUS = {

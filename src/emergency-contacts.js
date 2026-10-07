@@ -1,4 +1,4 @@
-// LIFELINE AI — Emergency contacts database (static defaults by country)
+// LIFELINE AI - Emergency contact utilities
 export const EMERGENCY_CONTACTS_BY_COUNTRY = {
   US: {
     police: { name: "Police", phone: "911", sms: false, call: true, category: "security_response", description: "Emergency police services" },

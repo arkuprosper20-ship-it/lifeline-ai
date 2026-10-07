@@ -1,4 +1,4 @@
-// LIFELINE AI — Report screen
+// LIFELINE AI - Report screen
 import { getState, store } from "../store.js";
 import { MAX_REPORT_LENGTH } from "../types.js";
 import { formatTimeAgo, esc } from "../ui.js";
@@ -20,13 +20,13 @@ export function initReportScreen() {
 
         <div class="btn-row" style="margin: 12px 0;">
           <button type="button" class="btn btn-secondary" id="voice-btn" data-action="voice-input">
-            🎙 Voice
+            [VOICE] Voice
           </button>
           <button type="button" class="btn btn-secondary" id="image-btn" data-action="image-input">
-            📷 Image
+            [CAMERA] Image
           </button>
           <button type="button" class="btn btn-secondary" id="location-btn" data-action="capture-location">
-            📍 Location
+            [LOC] Location
           </button>
         </div>
 
@@ -40,10 +40,10 @@ export function initReportScreen() {
         </div>` : ''}
 
         ${state.ui.locationText ? `
-        <p class="mu" style="margin-top:8px;">📍 ${esc(state.ui.locationText)}</p>` : ''}
+        <p class="mu" style="margin-top:8px;">[LOC] ${esc(state.ui.locationText)}</p>` : ''}
 
         ${state.ui.voiceText ? `
-        <p class="mu" style="margin-top:8px;">🎙 ${esc(state.ui.voiceText)}</p>` : ''}
+        <p class="mu" style="margin-top:8px;">[VOICE] ${esc(state.ui.voiceText)}</p>` : ''}
 
         <div class="divider"></div>
 
@@ -62,7 +62,7 @@ export function initReportScreen() {
             <span class="incident-type-icon">${getTypeIcon(incident.type)}</span>
             <div class="incident-text">
               <div class="incident-title">${esc(incident.typeLabel || incident.type)}</div>
-              <div class="incident-meta">${formatTimeAgo(incident.timestamp)} · ${esc(incident.observations?.slice(0, 2).join(", ") || "")}</div>
+              <div class="incident-meta">${formatTimeAgo(incident.timestamp)} . ${esc(incident.observations?.slice(0, 2).join(", ") || "")}</div>
             </div>
             <span class="badge ${getStatusBadge(incident.status)}">${getStatusLabel(incident.status)}</span>
           </div>
@@ -77,8 +77,8 @@ export function initReportScreen() {
 }
 
 function getTypeIcon(type) {
-  const icons = { fire_smoke: "🔥", medical: "🏥", flooding: "🌊", road_hazard: "🚧", power_hazard: "⚡", environmental: "🏗️", security: "⚠️", missing_person: "🔍", community_assistance: "🤝", unknown: "❓" };
-  return icons[type] || "📋";
+  const icons = { fire_smoke: "[FIRE]", medical: "[HOSPITAL]", flooding: "[FLOOD]", road_hazard: "[ROAD]", power_hazard: "[POWER]", environmental: "[BUILD]", security: "[WARN]️", missing_person: "[SEARCH]", community_assistance: "[HELP]", unknown: "[?]" };
+  return icons[type] || "[LIST]";
 }
 
 function getStatusBadge(status) {

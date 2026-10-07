@@ -1,4 +1,4 @@
-// LIFELINE AI — Multi-language support (i18n)
+// LIFELINE AI - Multi-language support
 // Uses a JSON-based translation system with runtime language switching
 
 const DEFAULT_LANGUAGE = "en";
@@ -50,7 +50,7 @@ const TRANSLATIONS = {
     report: "Report",
     coordination_center: "COORDINATION CENTER",
     filters: "Filters",
-    search: "Search by ID, type, or keyword…",
+    search: "Search by ID, type, or keyword...",
     locate_me: "Locate me",
     reset_view: "Reset view",
     demo_mode: "DEMO MODE",
@@ -131,7 +131,7 @@ const TRANSLATIONS = {
     report: "Informe",
     coordination_center: "CENTRO DE COORDINACIÓN",
     filters: "Filtros",
-    search: "Buscar por ID, tipo o palabra clave…",
+    search: "Buscar por ID, tipo o palabra clave...",
     locate_me: "Localíceme",
     reset_view: "Restablecer vista",
     demo_mode: "MODO DEMO",
@@ -212,7 +212,7 @@ const TRANSLATIONS = {
     report: "Rapport",
     coordination_center: "CENTRE DE COORDINATION",
     filters: "Filtres",
-    search: "Rechercher par ID, type ou mot-clé…",
+    search: "Rechercher par ID, type ou mot-clé...",
     locate_me: "Localiser moi",
     reset_view: "Réinitialiser la vue",
     demo_mode: "MODE DÉMO",

@@ -1,4 +1,4 @@
-// LIFELINE AI — AI Analysis API handler (Node.js serverless function)
+// LIFELINE AI - Analysis flow (AI router + rules engine)
 // Uses server-side Groq API key to enhance local analysis
 // NEVER exposes the API key to the frontend
 

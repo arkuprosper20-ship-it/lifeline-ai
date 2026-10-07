@@ -1,4 +1,4 @@
-// LIFELINE AI — Smart escalation screen
+// LIFELINE AI - Escalation screen
 import { getState, store } from "../store.js";
 import { getRecommendedContact, getAvailableChannels, buildIncidentPackage } from "../contacts.js";
 import { getRecommendedEmergencyContact } from "../emergency-contacts.js";
@@ -10,7 +10,7 @@ export function initEscalationScreen(params = {}) {
   const incident = params.incidentId ? state.incidents.find(i => i.id === params.incidentId) : state.ui.selectedIncident || state.incidents[0];
   if (!incident) return '<div class="card"><p>No incident found.</p></div>';
 
-  const typeInfo = INCIDENT_TYPES.find(t => t.id === incident.type) || { label: "Unknown", icon: "❓" };
+  const typeInfo = INCIDENT_TYPES.find(t => t.id === incident.type) || { label: "Unknown", icon: "[?]" };
   const countryCode = state.settings.countryCode || "US";
   const emergencyContact = getRecommendedEmergencyContact(incident.type, countryCode);
   const responseContact = getRecommendedContact(incident.type);
@@ -43,12 +43,12 @@ export function initEscalationScreen(params = {}) {
         </div>
 
         <div class="btn-row">
-          ${emergencyContact?.call ? `<button class="btn btn-primary btn-sm" data-action="call-emergency" data-phone="${esc(emergencyContact.phone?.replace('tel:', '') || '')}">📞 CALL NOW</button>` : ""}
-          ${emergencyContact?.sms ? `<button class="btn btn-secondary btn-sm" data-action="sms-emergency" data-phone="${esc(emergencyContact.phone?.replace('tel:', '') || '')}">💬 SMS</button>` : ""}
+          ${emergencyContact?.call ? `<button class="btn btn-primary btn-sm" data-action="call-emergency" data-phone="${esc(emergencyContact.phone?.replace('tel:', '') || '')}">[PHONE] CALL NOW</button>` : ""}
+          ${emergencyContact?.sms ? `<button class="btn btn-secondary btn-sm" data-action="sms-emergency" data-phone="${esc(emergencyContact.phone?.replace('tel:', '') || '')}">[SMS] SMS</button>` : ""}
         </div>
 
         <div class="warning-note" style="margin-top:12px; font-size:12px;">
-          ⚠ For immediate life-threatening emergencies, call your local emergency number (e.g., 911, 112, 999).
+          [WARN] For immediate life-threatening emergencies, call your local emergency number (e.g., 911, 112, 999).
           LIFELINE is not a replacement for emergency services.
         </div>
       </div>
@@ -56,12 +56,12 @@ export function initEscalationScreen(params = {}) {
       <div class="card">
         <h3>Information to share</h3>
         <ul style="list-style:none; padding-left:0;">
-          <li style="padding:4px 0;">✓ Incident type and urgency</li>
-          <li style="padding:4px 0;">✓ Observations</li>
-          <li style="padding:4px 0;">✓ Report timestamp</li>
-          <li style="padding:4px 0;">✓ Your approved location</li>
-          <li style="padding:4px 0;">✓ Map link</li>
-          <li style="padding:4px 0;">✓ Response category</li>
+          <li style="padding:4px 0;">[OK] Incident type and urgency</li>
+          <li style="padding:4px 0;">[OK] Observations</li>
+          <li style="padding:4px 0;">[OK] Report timestamp</li>
+          <li style="padding:4px 0;">[OK] Your approved location</li>
+          <li style="padding:4px 0;">[OK] Map link</li>
+          <li style="padding:4px 0;">[OK] Response category</li>
         </ul>
 
         <div class="btn-row" style="margin-top:16px;">

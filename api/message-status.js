@@ -1,4 +1,4 @@
-// LIFELINE AI — Message Status API
+// LIFELINE AI - Message delivery status API
 // Fetches delivery status for a specific message ID
 // Used by frontend to poll for Twilio delivery receipts
 

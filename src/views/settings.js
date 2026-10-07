@@ -1,4 +1,4 @@
-// LIFELINE AI — Settings screen
+// LIFELINE AI - Settings screen
 import { getState, store, isDBAvailable } from "../store.js";
 import { saveContacts } from "../contacts.js";
 import { getEnabledContacts, resetToDefaultContacts } from "../contacts.js";
@@ -17,7 +17,7 @@ export function initSettingsScreen() {
       <div class="card">
         <h2>Settings</h2>
         <p class="mu" style="margin-bottom:4px;">Configure LIFELINE for your community.</p>
-        <div class="text-small text-muted">Provider: ${state.settings.mode === "automatic" ? "Automatic (Groq → Local)" : state.settings.mode}</div>
+        <div class="text-small text-muted">Provider: ${state.settings.mode === "automatic" ? "Automatic (Groq -> Local)" : state.settings.mode}</div>
       </div>
 
       <div class="card">
@@ -33,7 +33,7 @@ export function initSettingsScreen() {
 
         <label style="margin-top:12px; display:block; font-size:13px;">
           Groq API Key
-          <input type="password" id="groq-api-key" placeholder="sk-..." value="${state.settings.groqApiKey ? '••••••••' : ''}" style="margin-top:6px; width:100%; padding:8px; border-radius:8px; background:var(--bg-primary); border:1px solid var(--border); color:var(--text-primary);" autocomplete="off" />
+          <input type="password" id="groq-api-key" placeholder="sk-..." value="${state.settings.groqApiKey ? '--------' : ''}" style="margin-top:6px; width:100%; padding:8px; border-radius:8px; background:var(--bg-primary); border:1px solid var(--border); color:var(--text-primary);" autocomplete="off" />
         </label>
         <p class="mu text-small" style="margin-top:4px;">Your key is stored locally in your browser only. Leave blank to use local rules engine.</p>
 
@@ -43,7 +43,7 @@ export function initSettingsScreen() {
         </label>
 
         <div class="mu text-small" style="margin-top:8px;">
-          ${state.isOnline ? '● ONLINE — AI enhancement available' : '○ OFFLINE — using local rules'}
+          ${state.isOnline ? '● ONLINE — AI enhancement available' : '[o] OFFLINE — using local rules'}
         </div>
       </div>
 
@@ -77,7 +77,7 @@ export function initSettingsScreen() {
         </label>
         <button type="button" class="btn btn-secondary btn-sm" id="reset-emergency-contacts" style="margin-top:12px;">Reset to country defaults</button>
         <p class="mu text-small" style="margin-top:8px;">
-          <a href="#/setup" data-action="navigate" data-to="setup" style="color:var(--accent);">Run full setup wizard →</a>
+          <a href="#/setup" data-action="navigate" data-to="setup" style="color:var(--accent);">Run full setup wizard -></a>
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export function initSettingsScreen() {
         <h3>Contact directory</h3>
         <p class="mu">${enabledCount} contact${enabledCount !== 1 ? "s" : ""} configured and enabled.</p>
         <button type="button" class="btn btn-secondary btn-sm" data-action="navigate" data-to="contacts">
-          Manage contacts →
+          Manage contacts ->
         </button>
       </div>
 
@@ -104,7 +104,7 @@ export function initSettingsScreen() {
         </label>
         <button type="button" class="btn btn-secondary btn-sm" id="refresh-notifications" style="margin-top:8px;">Refresh provider status</button>
         <p class="mu text-small" style="margin-top:8px;">
-          <a href="#/help" data-action="navigate" data-to="help" style="color:var(--accent);">Configure Twilio →</a>
+          <a href="#/help" data-action="navigate" data-to="help" style="color:var(--accent);">Configure Twilio -></a>
         </p>
       </div>
 
@@ -126,11 +126,11 @@ export function initSettingsScreen() {
             const totalActive = stats.total;
             const breached = stats.breached;
             const warning = stats.warning;
-            return `Active incidents: ${totalActive} · ${breached > 0 ? `⚠ ${breached} breached SLA` : warning > 0 ? `⚠ ${warning} approaching SLA` : "All within SLA"}`;
+            return `Active incidents: ${totalActive} . ${breached > 0 ? `[WARN] ${breached} breached SLA` : warning > 0 ? `[WARN] ${warning} approaching SLA` : "All within SLA"}`;
           })()}
         </p>
         <button type="button" class="btn btn-secondary btn-sm" id="view-sla-report">
-          View SLA report →
+          View SLA report ->
         </button>
       </div>
 
@@ -141,7 +141,7 @@ export function initSettingsScreen() {
         </p>
         <p class="mu">
           ${state.syncQueue?.length || 0} report(s) waiting to sync.
-          ${state.isOnline ? '● Ready to sync' : '○ Offline'}
+          ${state.isOnline ? '● Ready to sync' : '[o] Offline'}
         </p>
         <button type="button" class="btn btn-secondary btn-sm" id="clear-storage">
           Clear local data
@@ -153,8 +153,8 @@ export function initSettingsScreen() {
         <div class="mu text-small">
           LIFELINE AI v1.0.0<br />
           AI-powered community incident intelligence and response routing.<br />
-          <a href="#/about" class="text-muted" style="color:var(--accent);">About →</a>
-          <a href="#/privacy" class="text-muted" style="color:var(--accent); margin-left:8px;">Privacy →</a>
+          <a href="#/about" class="text-muted" style="color:var(--accent);">About -></a>
+          <a href="#/privacy" class="text-muted" style="color:var(--accent); margin-left:8px;">Privacy -></a>
         </div>
       </div>
     </div>

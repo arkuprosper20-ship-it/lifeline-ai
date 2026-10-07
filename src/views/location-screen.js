@@ -1,4 +1,4 @@
-// LIFELINE AI — Location screen
+// LIFELINE AI - Location capture screen
 import { getState, store } from "../store.js";
 import { getCurrentLocation, checkLocationPermission, createLocationLink, getAccuracyLabel, isAccuracyWarning } from "../location.js";
 import { esc } from "../ui.js";
@@ -15,16 +15,16 @@ export function initLocationScreen() {
       <div class="card">
         ${state.ui.location ? `
           <div class="flex-center" style="gap:12px; flex-direction:column; padding:24px 0;">
-            <div style="font-size:40px;">📍</div>
+            <div style="font-size:40px;">[LOC]</div>
             <h3>Location captured</h3>
             <div style="text-align:center; font-size:13px; color:var(--text-secondary); line-height:1.8;">
               <div><b>Latitude:</b> ${state.ui.location.latitude.toFixed(6)}</div>
               <div><b>Longitude:</b> ${state.ui.location.longitude.toFixed(6)}</div>
-              <div><b>Accuracy:</b> ${state.ui.location.accuracy ? `±${Math.round(state.ui.location.accuracy)}m` : "Unknown"}</div>
+              <div><b>Accuracy:</b> ${state.ui.location.accuracy ? `+/-${Math.round(state.ui.location.accuracy)}m` : "Unknown"}</div>
               <div><b>Captured:</b> ${new Date(state.ui.location.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}</div>
             </div>
             ${isAccuracyWarning(state.ui.location.accuracy) ? `
-              <div class="warning-note">⚠ Location accuracy is low. Consider moving to a more open area or selecting a location manually.</div>` : ''}
+              <div class="warning-note">[WARN] Location accuracy is low. Consider moving to a more open area or selecting a location manually.</div>` : ''}
 
             ${state.ui.location.latitude !== undefined ? `
               <a href="${createLocationLink(state.ui.location.latitude, state.ui.location.longitude)}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="margin-top:12px;">
@@ -33,7 +33,7 @@ export function initLocationScreen() {
           </div>
         ` : `
           <div class="flex-center" style="gap:12px; flex-direction:column; padding:24px 0;">
-            <div style="font-size:40px;">📍</div>
+            <div style="font-size:40px;">[LOC]</div>
             <h3>No location yet</h3>
             <p class="mu">Your location will not be captured or shared without your consent.</p>
             <div class="btn-row full-width" style="margin-top:16px;">
@@ -60,7 +60,7 @@ export function initLocationScreen() {
 
       <div class="card">
         <div class="btn-row">
-          <button class="btn btn-primary" data-action="navigate" data-to="brief">${state.ui.location ? 'CONTINUE' : 'CONTINUE WITHOUT LOCATION'} →</button>
+          <button class="btn btn-primary" data-action="navigate" data-to="brief">${state.ui.location ? 'CONTINUE' : 'CONTINUE WITHOUT LOCATION'} -></button>
         </div>
       </div>
     </div>
@@ -74,10 +74,10 @@ export function initLocationScreen() {
           <p>LIFELINE can attach your current location to this incident report.</p>
           <p style="margin-top:12px;"><b>What will be shared:</b></p>
           <ul style="list-style:none; padding-left:0; margin:8px 0;">
-            <li>✓ Latitude / Longitude</li>
-            <li>✓ Location accuracy</li>
-            <li>✓ Capture timestamp</li>
-            <li>✓ Generated map link</li>
+            <li>[OK] Latitude / Longitude</li>
+            <li>[OK] Location accuracy</li>
+            <li>[OK] Capture timestamp</li>
+            <li>[OK] Generated map link</li>
           </ul>
           <p style="margin-top:12px;">Your location will only be included in the approved incident package.</p>
         </div>

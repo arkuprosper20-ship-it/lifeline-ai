@@ -170,7 +170,7 @@ if (f.type === "link" && f.link) val = `<a href="${f.link}" target="_blank" rel=
         <span style="font-size:15px;">${spec.icon}</span>
         <div><b>${esc(inc.id)}</b> <span class="badge ${spec.badge}" style="font-size:10px;">${esc(spec.label)}</span></div>
       </div>
-      <div style="color:var(--text-tertiary);font-size:12px;margin:4px 0;">${esc(typeInfo.label)} · ${esc(inc.urgency || "")}</div>
+      <div style="color:var(--text-tertiary);font-size:12px;margin:4px 0;">${esc(typeInfo.label)} . ${esc(inc.urgency || "")}</div>
       ${fieldsHtml}
       ${link ? `<a href="${link}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);">OPEN MAP -></a>` : "<span style='font-size:11px;color:var(--text-tertiary);'>No coordinates</span>"}
       ${!isDashboard ? `<div style="margin-top:6px;"><button type="button" class="btn btn-primary" style="width:100%;font-size:12px;padding:6px;" data-view-incident="${esc(inc.id)}">VIEW INCIDENT</button></div>` : ""}

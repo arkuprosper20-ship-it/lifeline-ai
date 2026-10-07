@@ -1,4 +1,4 @@
-// LIFELINE AI — Help & support view
+// LIFELINE AI - Help screen
 export function initHelpScreen() {
   return `
     <div class="help-screen">
@@ -66,7 +66,7 @@ SMS_FROM=+1234567890</pre>
       <div class="card">
         <h3>Emergency notice</h3>
         <p style="color:var(--status-immediate);">
-          ⚠ If someone is in immediate danger, call your local emergency number immediately.
+          [WARN] If someone is in immediate danger, call your local emergency number immediately.
           LIFELINE is not a replacement for emergency services.
         </p>
       </div>

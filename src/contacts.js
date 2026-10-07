@@ -1,4 +1,4 @@
-// LIFELINE AI — Contact directory and escalation logic
+// LIFELINE AI - Contact directory and escalation logic
 import { createLocationLink } from "./location.js";
 import { INCIDENT_TYPES } from "./types.js";
 
@@ -68,10 +68,10 @@ export function getRecommendedContact(incidentType) {
 
 export function getAvailableChannels(contact) {
   const channels = [];
-  if (contact.call && contact.phone) channels.push({ type: "call", label: "CALL", icon: "📞", available: true });
-  if (contact.sms && contact.phone) channels.push({ type: "sms", label: "SMS", icon: "💬", available: true });
-  if (contact.email) channels.push({ type: "email", label: "EMAIL", icon: "✉️", available: typeof contact.email === "string" && contact.email !== "" });
-  if (contact.webhook) channels.push({ type: "webhook", label: "WEBHOOK", icon: "🔗", available: typeof contact.webhook === "string" && contact.webhook !== "" });
+  if (contact.call && contact.phone) channels.push({ type: "call", label: "CALL", icon: "[PHONE]", available: true });
+  if (contact.sms && contact.phone) channels.push({ type: "sms", label: "SMS", icon: "[SMS]", available: true });
+  if (contact.email) channels.push({ type: "email", label: "EMAIL", icon: "[EMAIL]", available: typeof contact.email === "string" && contact.email !== "" });
+  if (contact.webhook) channels.push({ type: "webhook", label: "WEBHOOK", icon: "[WEBHOOK]", available: typeof contact.webhook === "string" && contact.webhook !== "" });
   return channels;
 }
 
@@ -84,15 +84,15 @@ export function buildIncidentPackage(incident) {
   if (location && location.latitude !== undefined && location.longitude !== undefined) {
     mapLink = createLocationLink(location.latitude, location.longitude);
     locationType = location.source || "gps";
-    locationSection = `Lat: ${location.latitude.toFixed(6)}\nLng: ${location.longitude.toFixed(6)}\nAccuracy: ${location.accuracy ? `±${Math.round(location.accuracy)}m` : "Unknown"}\nType: ${location.sourceLabel || locationType}`;
+    locationSection = `Lat: ${location.latitude.toFixed(6)}\nLng: ${location.longitude.toFixed(6)}\nAccuracy: ${location.accuracy ? `+/-${Math.round(location.accuracy)}m` : "Unknown"}\nType: ${location.sourceLabel || locationType}`;
   } else if (location && location.description) {
     locationSection = location.description;
     locationType = "text";
   }
 
   const typeLabel = INCIDENT_TYPES.find(t => t.id === incident.type)?.label || incident.type || "Unknown";
-  const obsLines = (incident.observations || []).map(o => `• ${o}`).join("\n");
-  const missingLines = (incident.missingInfo || []).map(m => `• ${m}`).join("\n");
+  const obsLines = (incident.observations || []).map(o => `- ${o}`).join("\n");
+  const missingLines = (incident.missingInfo || []).map(m => `- ${m}`).join("\n");
 
   return {
     incidentId: incident.id,
@@ -117,7 +117,7 @@ export function buildIncidentPackage(incident) {
 }
 
 function buildTextMessage(incident, typeLabel, obsLines, missingLines, locationSection, mapLink) {
-  let msg = `LIFELINE INCIDENT ${incident.id}\n\n${typeLabel}\n\nTime: ${new Date(incident.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}\n\nOBSERVATIONS\n${obsLines || "• None reported"}\n\n`;
+  let msg = `LIFELINE INCIDENT ${incident.id}\n\n${typeLabel}\n\nTime: ${new Date(incident.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}\n\nOBSERVATIONS\n${obsLines || "- None reported"}\n\n`;
   if (missingLines) msg += `MISSING\n${missingLines}\n\n`;
   msg += `LOCATION\n${locationSection}`;
   if (mapLink) msg += `\n\nMAP: ${mapLink}`;

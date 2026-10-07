@@ -1,4 +1,4 @@
-// LIFELINE AI — Sync queue (offline-first architecture)
+// LIFELINE AI - Offline sync queue
 import { STORAGE_KEYS } from "./types.js";
 
 export function enqueueSync(item) {

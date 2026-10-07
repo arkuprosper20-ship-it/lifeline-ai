@@ -1,4 +1,4 @@
-// LIFELINE AI — Privacy policy view
+// LIFELINE AI - Privacy screen
 export function initPrivacyScreen() {
   return `
     <div class="privacy-screen">
@@ -52,7 +52,7 @@ export function initPrivacyScreen() {
 
       <div class="card">
         <h3>Data Deletion</h4>
-        <p>You can delete all local data at any time through Settings → Offline storage → Clear data.
+        <p>You can delete all local data at any time through Settings -> Offline storage -> Clear data.
            Contact your administrator for server-side data retention policies.</p>
       </div>
 

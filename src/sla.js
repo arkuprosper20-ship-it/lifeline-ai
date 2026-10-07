@@ -1,4 +1,4 @@
-// LIFELINE AI — Incident SLA tracking and escalation timers
+// LIFELINE AI - SLA tracking and escalation timers
 // Tracks response times per urgency level and provides alerts
 
 const SLA_THRESHOLDS = {
