@@ -4,30 +4,10 @@ import { localAnalysis, detectSafetyOverride } from "../analyzer.js";
 import { createIncidentId, INCIDENT_STATUS_LABELS } from "../types.js";
 import { showToast } from "../ui.js";
 
-function render() {
-  const app = document.getElementById("app");
-  if (!app) return;
-  const { routes, viewSetups, getCurrentView, parseHashParams, initSidebar, initMobileNav, setupMap } = window;
-  const view = getCurrentView();
-  const hashParams = parseHashParams();
-  const params = { ...getState().ui.params, ...hashParams };
-  const component = routes[view];
-  if (!component) {
-    app.innerHTML = "<div class='card'><p>View not found.</p></div>";
-    return;
-  }
-  const html = component(params);
-  app.innerHTML = "";
-  if (typeof html === "string") {
-    app.innerHTML = html;
-  }
-  initSidebar();
-  initMobileNav();
-  setTimeout(() => {
-    if (viewSetups[view]) viewSetups[view]();
-    if (view === "map") setupMap();
-    if (view === "coordination") setupMap("dashboard-map", { isDashboard: true });
-  }, 50);
+function navigateTo(hash) {
+  history.replaceState(null, "", hash);
+  // Use window.dispatchEvent (location doesn't have dispatchEvent)
+  setTimeout(() => { window.dispatchEvent(new HashChangeEvent("hashchange")); }, 50);
 }
 
 function finalizeIncident(analysis, finalUrgency, provider, model, hasImage, enhanced) {
@@ -71,8 +51,7 @@ function finalizeIncident(analysis, finalUrgency, provider, model, hasImage, enh
   });
   state.ui.selectedIncident = incident;
 
-  history.replaceState(null, "", "#escalation");
-  setTimeout(() => { location.dispatchEvent(new HashChangeEvent("hashchange")); }, 50);
+  navigateTo("#escalation");
   showToast(enhanced ? "AI analysis complete. Incident brief generated." : "Analysis complete. Incident brief generated.");
 }
 
@@ -88,8 +67,7 @@ export async function startAnalysisFlow() {
   state.ui.analysisResult = null;
   store.setUI({ isAnalyzing: true, reportText });
   state.ui.params = {};
-  history.replaceState(null, "", "#analysis");
-  setTimeout(() => { location.dispatchEvent(new HashChangeEvent("hashchange")); }, 100);
+  navigateTo("#analysis");
 
   try {
     const mode = state.settings.mode;
@@ -112,7 +90,6 @@ export async function startAnalysisFlow() {
     // AI mode: show local result first, then enhance via server-side endpoint
     state.ui.analysisResult = { ...local, provider: "rules", model: null, fallbackFrom: "ai" };
     store.setUI({ isAnalyzing: true, analysisResult: state.ui.analysisResult });
-    setTimeout(render, 50);
 
     try {
       const { getAIAnalysis } = await import("../analyzer.js");
