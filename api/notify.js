@@ -323,9 +323,12 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 200, { success: true, result: result, ok: ok });
   } catch (error) {
     console.error("[LIFELINE] Notification error:", error);
-    return sendJson(res, 502, {
-      error: error.message || "Notification failed.",
+    return sendJson(res, 200, {
+      success: false,
+      error: error.message || "Notification failed. Use device SMS/email.",
       code: "notification_failed",
+      fallback: true,
+      result: { provider: "device-sms", status: "NOT_CONFIGURED", delivered: false, note: "Server notification unavailable. Use your device." },
     });
   }
 };

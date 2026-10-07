@@ -20,7 +20,7 @@ import { initAuthScreen, setupAuthHandlers } from "./views/auth.js";
 import { initSetupWizard, setupWizardHandlers, checkNeedsSetup } from "./views/setup-wizard.js";
 import { startAnalysisFlow } from "./flows/analyze.js";
 import { setupGlobalListeners } from "./handlers.js";
-import { renderComponent, showToast } from "./ui.js";
+import { renderComponent, showToast, installErrorBoundary } from "./ui.js";
 import { buildIncidentPackage } from "./contacts.js";
 import { fetchProviderConfig } from "./notification-providers.js";
 import { readNotifications } from "./sync.js";
@@ -411,6 +411,8 @@ subscribe(() => {
 
 setupGlobalListeners();
 
+installErrorBoundary();
+
 window.addEventListener("hashchange", () => {
   setTimeout(render, 50);
 });
@@ -512,7 +514,13 @@ function initSLATimers() {
   });
 }
 
-initSLATimers();
+// Pre-capture location in background (non-blocking)
+import { preCaptureLocation } from "./location.js";
+preCaptureLocation().then(result => {
+  if (result.captured) {
+    console.log("[LIFELINE] Location pre-captured:", result.coords.latitude.toFixed(4), result.coords.longitude.toFixed(4));
+  }
+}).catch(() => {});
 
 // Initialize WebSocket real-time sync for coordination dashboard
 function initWebSocket() {

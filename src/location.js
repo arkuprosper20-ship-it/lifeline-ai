@@ -1,8 +1,10 @@
 // LIFELINE AI - Location and geolocation utilities
 import { LOCATION_SOURCES, classNames } from "./types.js";
+import { getState, store } from "./store.js";
 
 let permissionState = "unknowing";
 let locationCache = null;
+let preCapturePromise = null;
 
 export function checkLocationPermission() {
   return new Promise((resolve) => {
@@ -46,6 +48,8 @@ export function getCurrentLocation(options = {}) {
           sourceLabel: LOCATION_SOURCES.gps.label,
         };
         locationCache = coords;
+        // Update store immediately for UI
+        store.setUI({ location: coords });
         resolve(coords);
       },
       (error) => {
@@ -58,6 +62,27 @@ export function getCurrentLocation(options = {}) {
       { timeout, enableHighAccuracy }
     );
   });
+}
+
+// Pre-capture location in background on app load
+export function preCaptureLocation() {
+  if (preCapturePromise) return preCapturePromise;
+  
+  preCapturePromise = (async () => {
+    try {
+      const perm = await checkLocationPermission();
+      if (!perm.granted) {
+        // Don't auto-request - just cache the permission state
+        return { captured: false, reason: perm.reason };
+      }
+      const coords = await getCurrentLocation({ timeout: 10000, enableHighAccuracy: true });
+      return { captured: true, coords };
+    } catch (error) {
+      return { captured: false, reason: error.message };
+    }
+  })();
+  
+  return preCapturePromise;
 }
 
 export function getLocationCache() { return locationCache; }

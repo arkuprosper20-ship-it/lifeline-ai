@@ -15,11 +15,26 @@ export function initEscalationScreen(params = {}) {
   const emergencyContact = getRecommendedEmergencyContact(incident.type, countryCode);
   const responseContact = getRecommendedContact(incident.type);
 
+  // Always show 911/local emergency as first option
+  const localEmergency = { name: "Local Emergency (911/112/999)", phone: "911", description: "Immediate emergency response", category: "emergency", call: true, sms: false };
+
   return `
     <div class="escalation-screen">
-      <div class="card">
+      <div class="card" style="border-left:4px solid var(--danger);">
         <h2>Smart Escalation</h2>
         <p class="mu">Based on the incident classification, LIFELINE recommends contacting the appropriate response team.</p>
+      </div>
+
+      <div class="card" style="background:rgba(220,50,50,0.1); border:1px solid var(--danger);">
+        <h3 style="color:var(--danger); margin-bottom:8px;">[PHONE] IMMEDIATE EMERGENCY</h3>
+        <div class="btn-row" style="gap:8px;">
+          <a href="tel:911" class="btn btn-danger" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+            [PHONE] CALL 911 NOW
+          </a>
+          <a href="tel:112" class="btn btn-danger btn-sm" style="text-decoration:none;">112 (EU)</a>
+          <a href="tel:999" class="btn btn-danger btn-sm" style="text-decoration:none;">999 (UK)</a>
+        </div>
+        <p class="mu" style="margin-top:8px;">Tap to call immediately. Works offline.</p>
       </div>
 
       <div class="card">
@@ -43,7 +58,7 @@ export function initEscalationScreen(params = {}) {
         </div>
 
         <div class="btn-row">
-          ${emergencyContact?.call ? `<button class="btn btn-primary btn-sm" data-action="call-emergency" data-phone="${esc(emergencyContact.phone?.replace('tel:', '') || '')}">[PHONE] CALL NOW</button>` : ""}
+          ${emergencyContact?.call ? `<button class="btn btn-primary btn-sm" data-action="call-emergency" data-phone="${esc(emergencyContact.phone?.replace('tel:', '') || '')}">[PHONE] CALL</button>` : ""}
           ${emergencyContact?.sms ? `<button class="btn btn-secondary btn-sm" data-action="sms-emergency" data-phone="${esc(emergencyContact.phone?.replace('tel:', '') || '')}">[SMS] SMS</button>` : ""}
         </div>
 

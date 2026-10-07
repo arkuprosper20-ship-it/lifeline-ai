@@ -1,9 +1,33 @@
 // LIFELINE AI - UI helper utilities
 export function renderComponent(container, renderFn) {
   if (typeof renderFn === "function") {
-    const result = renderFn();
-    container.innerHTML = typeof result === "string" ? result : "";
+    try {
+      const result = renderFn();
+      container.innerHTML = typeof result === "string" ? result : "";
+    } catch (error) {
+      console.error("[LIFELINE] Render error:", error);
+      container.innerHTML = `
+        <div class="card" style="border-color:var(--danger);">
+          <h3 style="color:var(--danger);">[WARN] Something went wrong</h3>
+          <p>Unable to load this view. Please try again.</p>
+          <button class="btn btn-primary" onclick="location.reload()">Reload App</button>
+        </div>
+      `;
+    }
   }
+}
+
+// Global error boundary for unhandled errors
+export function installErrorBoundary() {
+  window.addEventListener("error", (event) => {
+    console.error("[LIFELINE] Global error:", event.error || event.message);
+    showToast("An error occurred. The app will continue.", "warning");
+  });
+  window.addEventListener("unhandledrejection", (event) => {
+    console.error("[LIFELINE] Unhandled rejection:", event.reason);
+    event.preventDefault();
+    showToast("A background task failed. The app will continue.", "warning");
+  });
 }
 
 export function showToast(message, type = "info", duration = 4000) {

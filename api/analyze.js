@@ -74,11 +74,13 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 405, { error: "Method not allowed.", code: "method_not_allowed" });
   }
 
+  // Always return 200 with fallback - never 500
+  // Local analysis is now primary; this endpoint is optional enhancement
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return sendJson(res, 503, {
+    return sendJson(res, 200, {
       success: false,
-      error: "AI service not configured.",
+      error: "AI service not configured. Using local analysis.",
       code: "not_configured",
       fallback: true,
     });

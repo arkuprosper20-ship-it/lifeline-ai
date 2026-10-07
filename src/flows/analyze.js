@@ -1,4 +1,4 @@
-// LIFELINE AI - Analysis flow (AI router + rules engine)
+// LIFELINE AI - Local-only analysis flow (fast, reliable, offline-first)
 import { getState, store } from "../store.js";
 import { localAnalysis, detectSafetyOverride } from "../analyzer.js";
 import { createIncidentId, INCIDENT_STATUS_LABELS } from "../types.js";
@@ -6,15 +6,13 @@ import { showToast } from "../ui.js";
 
 function navigateTo(hash) {
   history.replaceState(null, "", hash);
-  // Use window.dispatchEvent (location doesn't have dispatchEvent)
-  setTimeout(() => { window.dispatchEvent(new HashChangeEvent("hashchange")); }, 50);
+  setTimeout(() => { window.dispatchEvent(new HashChangeEvent("hashchange")); }, 0);
 }
 
-function finalizeIncident(analysis, finalUrgency, provider, model, hasImage, enhanced) {
+function finalizeIncident(analysis, finalUrgency, provider, hasImage) {
   const state = getState();
-  const safetyOverride = provider !== "rules" || enhanced;
 
-  state.ui.analysisResult = { ...analysis, provider, model, urgency: finalUrgency, safetyOverride };
+  state.ui.analysisResult = { ...analysis, provider, model: null, urgency: finalUrgency, safetyOverride: true };
   state.ui.isAnalyzing = false;
 
   const incident = {
@@ -29,13 +27,13 @@ function finalizeIncident(analysis, finalUrgency, provider, model, hasImage, enh
     location: state.ui.location || null,
     timestamp: Date.now(),
     provider,
-    model,
+    model: null,
     confidence: analysis.confidence || 0,
     aiClassification: analysis.summary || "",
-    source: provider === "groq" ? "ai" : "local",
-    safetyOverrideApplied: safetyOverride,
+    source: "local",
+    safetyOverrideApplied: true,
     hasImage,
-    enhanced,
+    enhanced: false,
     synced: false,
     isDemo: state.demoMode,
   };
@@ -43,7 +41,7 @@ function finalizeIncident(analysis, finalUrgency, provider, model, hasImage, enh
   store.addIncident(incident);
   store.setUI({
     isAnalyzing: false,
-    analysisResult: { ...analysis, provider, model, urgency: finalUrgency },
+    analysisResult: { ...analysis, provider, model: null, urgency: finalUrgency },
     selectedIncident: incident,
     reportText: "",
     imagePreview: hasImage ? state.ui.imagePreview : null,
@@ -52,7 +50,7 @@ function finalizeIncident(analysis, finalUrgency, provider, model, hasImage, enh
   state.ui.selectedIncident = incident;
 
   navigateTo("#escalation");
-  showToast(enhanced ? "AI analysis complete. Incident brief generated." : "Analysis complete. Incident brief generated.");
+  showToast("Analysis complete. Incident brief generated.");
 }
 
 export async function startAnalysisFlow() {
@@ -70,52 +68,20 @@ export async function startAnalysisFlow() {
   navigateTo("#analysis");
 
   try {
-    const mode = state.settings.mode;
-
-    // Always run local analysis first for instant feedback
+    // Instant local analysis (no network, no server calls)
     const local = localAnalysis(reportText);
     const safetyOverride = detectSafetyOverride(local.urgency, local.type, local.observations);
     const finalUrgency = safetyOverride !== local.urgency ? safetyOverride : local.urgency;
 
-    // Check if AI is available from server (no user key needed)
-    const useAI = (mode === "groq" || mode === "automatic") && navigator.onLine;
+    // Immediate local result - no server calls, no waiting
+    state.ui.analysisResult = { ...local, provider: "local", model: null, urgency: finalUrgency };
+    store.setUI({ isAnalyzing: false, analysisResult: state.ui.analysisResult });
 
-    // Show local result immediately if AI is not needed
-    if (!useAI) {
-      state.ui.analysisResult = { ...local, provider: "rules", model: null };
-      finalizeIncident(local, finalUrgency, "rules", null, !!state.ui.imagePreview, false);
-      return;
-    }
-
-    // AI mode: show local result first, then enhance via server-side endpoint
-    state.ui.analysisResult = { ...local, provider: "rules", model: null, fallbackFrom: "ai" };
-    store.setUI({ isAnalyzing: true, analysisResult: state.ui.analysisResult });
-
-    try {
-      const { getAIAnalysis } = await import("../analyzer.js");
-      const result = await getAIAnalysis(reportText, state.ui.imagePreview, {
-        fetchImpl: fetch,
-        signal: AbortSignal.timeout(15000),
-        observations: local.observations,
-        incidentType: local.type,
-        urgency: local.urgency
-      });
-      if (result.provider === "groq") {
-        const aiUrgency = result.analysis?.urgency || local.urgency;
-        const aiOverride = detectSafetyOverride(aiUrgency, result.analysis?.type || local.type, result.analysis?.observations || []);
-        const finalAIUrgency = aiOverride !== aiUrgency ? aiOverride : aiUrgency;
-        finalizeIncident(result.analysis, finalAIUrgency, "groq", result.model || "llama-3.3-70b-versatile", !!state.ui.imagePreview, true);
-      } else {
-        finalizeIncident({ ...state.ui.analysisResult, provider: "rules", model: null }, finalUrgency, "rules", null, !!state.ui.imagePreview, false);
-      }
-    } catch (error) {
-      console.warn("Groq analysis failed, using local result:", error.message);
-      finalizeIncident({ ...state.ui.analysisResult, provider: "rules", model: null }, finalUrgency, "rules", null, !!state.ui.imagePreview, false);
-    }
+    finalizeIncident(local, finalUrgency, "local", !!state.ui.imagePreview);
   } catch (error) {
-    // Fallback to pure local on unexpected error
-    const local = localAnalysis(reportText);
-    const safetyOverride = detectSafetyOverride(local.urgency, local.type, local.observations || []);
-    finalizeIncident(local, safetyOverride !== local.urgency ? safetyOverride : local.urgency, "rules", null, !!state.ui.imagePreview, false);
+    console.error("Analysis failed:", error);
+    showToast("Analysis error. Please try again.");
+    state.ui.isAnalyzing = false;
+    store.setUI({ isAnalyzing: false });
   }
 }

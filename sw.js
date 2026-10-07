@@ -47,6 +47,10 @@ const ASSETS = [
   "/src/views/setup-wizard.js",
   "/leaflet/leaflet.js",
   "/leaflet/leaflet.css",
+  // Critical view templates - precache for instant render
+  "/src/views/map.js",
+  "/src/views/history.js",
+  "/src/views/settings.js",
 ];
 
 self.addEventListener("install", (event) => {
