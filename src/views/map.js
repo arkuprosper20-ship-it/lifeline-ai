@@ -73,12 +73,19 @@ function renderIncidentListItems(incidents) {
     .join("");
 }
 
-export function initMapScreen() {
+export function initMapScreen(params = {}) {
   const state = getState();
   const online = isOnline();
   const loc = state.ui.currentLocation || null;
   const realWithCoords = state.incidents.filter((i) => hasCoords(i)).length;
   const showDemo = realWithCoords === 0;
+  const incidentId = params.incident || null;
+  const targetIncident = incidentId ? state.incidents.find(i => i.id === incidentId) : null;
+  
+  // If we have a target incident with coordinates, center on it
+  const initialCenter = targetIncident && targetIncident.location && targetIncident.location.latitude
+    ? [targetIncident.location.latitude, targetIncident.location.longitude]
+    : null;
 
   return `
     <div class="map-screen">
@@ -179,6 +186,7 @@ if (f.type === "link" && f.link) val = `<a href="${f.link}" target="_blank" rel=
 
 export function setupMap(containerId = "incident-map", options = {}) {
   const isDashboard = options.isDashboard === true;
+  const incidentId = options.incidentId || null;
   const mapContainer = document.getElementById(containerId);
   if (!mapContainer) return null;
 
@@ -186,6 +194,7 @@ export function setupMap(containerId = "incident-map", options = {}) {
   let markers = new Map();
   let userMarker = null;
   let filters = { ...DEFAULT_FILTERS };
+  let targetIncident = null;
 
   function buildIncidentSource() {
     const s = getState();
@@ -234,6 +243,10 @@ export function setupMap(containerId = "incident-map", options = {}) {
       detectRetina: true,
     }).addTo(map);
 
+    // Set target incident if provided
+    const s = getState();
+    targetIncident = s.incidents.find(i => i.id === incidentId) || null;
+
     renderMarkers();
     fitMap();
   }
@@ -258,6 +271,9 @@ export function setupMap(containerId = "incident-map", options = {}) {
     });
 
     map.on("load", () => {
+      // Set target incident if provided
+      const s = getState();
+      targetIncident = s.incidents.find(i => i.id === incidentId) || null;
       renderMarkers();
       fitMap();
     });
@@ -292,6 +308,16 @@ export function setupMap(containerId = "incident-map", options = {}) {
     if (!map) return;
     const items = Array.from(markers.values());
     if (!items.length) return;
+    
+    // If we have a target incident, center on it
+    if (targetIncident) {
+      const loc = resolveLocation(targetIncident, { coordinator: isDashboard });
+      if (loc.plottable) {
+        map.setView([loc.lat, loc.lng], 13);
+        return;
+      }
+    }
+    
     if (items.length === 1) {
       const loc = resolveLocation(items[0].incident, { coordinator: isDashboard });
       map.setView([loc.lat, loc.lng], 13);

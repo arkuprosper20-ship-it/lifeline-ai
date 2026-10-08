@@ -3,7 +3,7 @@ import { getState, store } from "../store.js";
 import { navigateTo } from "../navigation.js";
 import { preCaptureLocation } from "../location.js";
 import { localAnalysis } from "../analyzer.js";
-import { showToast, esc } from "../ui.js";
+import { showToast, esc, formatTimeAgo } from "../ui.js";
 
 const EMERGENCY_CATEGORIES = [
   { id: "medical", label: "MEDICAL", icon: "🚑", color: "#ec4899", description: "Injury, illness, unconscious" },
@@ -366,16 +366,91 @@ async function sendHelp() {
       console.warn("[LIFELINE] Notify API unavailable:", e);
     }
     
-    // Show active incident screen
-    setTimeout(() => {
-      navigateTo(`incident/${incident.id}`);
-    }, 500);
+    // Show success screen
+    app.innerHTML = renderSuccessScreen(incident);
+    setupSuccessHandlers(incident.id);
     
   } catch (error) {
     console.error("[LIFELINE] Send help failed:", error);
     showToast("Failed to send help request", "error");
     setTimeout(() => { app.innerHTML = renderConfirmScreen(); }, 1000);
   }
+}
+
+function renderSuccessScreen(incident) {
+  const cat = EMERGENCY_CATEGORIES.find(c => c.id === incident.type);
+  const timeAgo = formatTimeAgo(incident.timestamp);
+  
+  return `
+    <div class="emergency-success">
+      <div class="success-icon">✓</div>
+      <h2>HELP REQUEST SENT</h2>
+      <p class="success-message">Emergency services have been notified with your location and incident details.</p>
+      
+      <div class="success-summary">
+        <div class="summary-row">
+          <span class="summary-label">INCIDENT ID</span>
+          <span class="summary-value">${esc(incident.id)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">TYPE</span>
+          <span class="summary-value" style="color: ${cat?.color}">${esc(cat?.label || incident.type)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">URGENCY</span>
+          <span class="summary-value urgency-${incident.urgency}">${esc(incident.urgency.toUpperCase())}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">STATUS</span>
+          <span class="summary-value status-active">HELP REQUESTED</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">TIME</span>
+          <span class="summary-value">${timeAgo}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">LOCATION</span>
+          <span class="summary-value status-detected">ATTACHED</span>
+        </div>
+      </div>
+      
+      <div class="success-actions">
+        <button class="btn btn-primary" data-action="view-map" data-incident-id="${incident.id}">
+          <span class="btn-icon" aria-hidden="true">[MAP]</span>
+          VIEW ON MAP
+        </button>
+        <button class="btn btn-secondary" data-action="new-emergency">
+          NEW EMERGENCY
+        </button>
+        <button class="btn btn-secondary btn-sm" data-action="view-history">
+          VIEW HISTORY
+        </button>
+      </div>
+      
+      <div class="success-note">
+        <span class="note-icon" aria-hidden="true">ℹ</span>
+        <span>Your incident is now active. Tap VIEW MAP to track response.</span>
+      </div>
+    </div>
+  `;
+}
+
+function setupSuccessHandlers(incidentId) {
+  const app = document.getElementById("app");
+  if (!app) return;
+  
+  app.addEventListener("click", (e) => {
+    if (e.target.closest("[data-action='view-map']")) {
+      navigateTo(`map?incident=${incidentId}`);
+    }
+    if (e.target.closest("[data-action='new-emergency']")) {
+      resetEmergencyFlow();
+      navigateTo("emergency");
+    }
+    if (e.target.closest("[data-action='view-history']")) {
+      navigateTo("emergency");
+    }
+  });
 }
 
 function determineUrgency(answers) {

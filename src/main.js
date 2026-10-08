@@ -133,7 +133,7 @@ function render() {
     setTimeout(() => viewSetups[view](), 50);
   }
   if (view === "map") {
-    setTimeout(() => setupMap(), 100);
+    setTimeout(() => setupMap("incident-map", { isDashboard: false, incidentId: params.incident }), 100);
   }
   app.addEventListener("click", (e) => {
     const navLink = e.target.closest("[data-nav]");
