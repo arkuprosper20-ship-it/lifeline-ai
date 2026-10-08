@@ -338,7 +338,21 @@ subscribe(() => {
 
   if (s.ui.needsRender) {
     s.ui.needsRender = false;
-    render();
+// On fresh load (not navigation), clear incident-specific hash to show emergency home
+if (!sessionStorage.getItem("lifeline-navigated")) {
+  const hash = location.hash;
+  if (hash.startsWith("#map?incident=")) {
+    history.replaceState(null, "", "#emergency");
+  }
+  sessionStorage.setItem("lifeline-navigated", "true");
+}
+
+// Clear navigation flag on page unload so next fresh load resets
+window.addEventListener("beforeunload", () => {
+  sessionStorage.removeItem("lifeline-navigated");
+});
+
+render();
   }
 });
 
