@@ -441,7 +441,7 @@ function setupSuccessHandlers(incidentId) {
   
   app.addEventListener("click", (e) => {
     if (e.target.closest("[data-action='view-map']")) {
-      navigateTo(`map?incident=${incidentId}`);
+      navigateTo("map", { incident: incidentId });
     }
     if (e.target.closest("[data-action='new-emergency']")) {
       resetEmergencyFlow();
