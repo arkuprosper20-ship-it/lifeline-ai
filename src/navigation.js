@@ -24,7 +24,7 @@ export function navigateTo(view, params = {}) {
     setup: true,
   };
   
-  if (!routes[view]) view = "report";
+  if (!routes[view]) view = "emergency";
   const app = document.getElementById("app");
   if (app) {
     app.classList.add("page-exit");
@@ -32,11 +32,12 @@ export function navigateTo(view, params = {}) {
   }
   setTimeout(() => {
     const search = new URLSearchParams(params);
-    history.replaceState(null, "", "#" + view + (search.toString() ? "?" + search.toString() : ""));
+    const newHash = "#" + view + (search.toString() ? "?" + search.toString() : "");
+    // Use location.hash to trigger hashchange event
+    location.hash = newHash;
     getState().ui.currentView = view;
     getState().ui.params = params;
     store.save();
-    // Render will be triggered by hashchange listener
   }, 150);
 }
 
