@@ -1,26 +1,7 @@
 // LIFELINE AI - Main entry point and router
 import { store, getState, subscribe } from "./store.js";
-import { initReportScreen } from "./views/report.js";
-import { initAnalysisScreen } from "./views/analysis.js";
-import { initIncidentBrief } from "./views/incident-brief.js";
-import { initLocationScreen, setupLocationHandlers } from "./views/location-screen.js";
-import { initEscalationScreen, setupEscalationHandlers } from "./views/escalation.js";
-import { initConfirmScreen, setupConfirmHandlers } from "./views/confirm.js";
-import { initDeliveryStatus, setupDeliveryHandlers } from "./views/delivery-status.js";
-import { initMapScreen, setupMap } from "./views/map.js";
-import { initHistoryScreen } from "./views/history.js";
-import { initSettingsScreen, setupSettingsHandlers } from "./views/settings.js";
-import { initContactsAdmin, setupContactsHandlers } from "./views/contacts-admin.js";
-import { initCoordinationScreen, setupCoordinationHandlers } from "./views/coordination.js";
-import { initAuditScreen } from "./views/audit.js";
-import { initAboutScreen } from "./views/about.js";
-import { initPrivacyScreen } from "./views/privacy.js";
-import { initHelpScreen } from "./views/help.js";
-import { initAuthScreen, setupAuthHandlers } from "./views/auth.js";
-import { initSetupWizard, setupWizardHandlers, checkNeedsSetup } from "./views/setup-wizard.js";
 import { initEmergencyHome, setupEmergencyHomeHandlers } from "./views/emergency-home.js";
-import { startAnalysisFlow } from "./flows/analyze.js";
-import { setupGlobalListeners } from "./handlers.js";
+import { initMapScreen, setupMap } from "./views/map.js";
 import { renderComponent, showToast, installErrorBoundary } from "./ui.js";
 import { buildIncidentPackage } from "./contacts.js";
 import { fetchProviderConfig } from "./notification-providers.js";
@@ -35,38 +16,12 @@ import { navigateTo, getHashRoute } from "./navigation.js";
 
 const routes = {
   emergency: initEmergencyHome,
-  report: initReportScreen,
-  analysis: initAnalysisScreen,
-  brief: initIncidentBrief,
-  location: initLocationScreen,
-  escalation: initEscalationScreen,
-  confirm: initConfirmScreen,
-  delivery: initDeliveryStatus,
   map: initMapScreen,
-  history: initHistoryScreen,
-  settings: initSettingsScreen,
-  contacts: initContactsAdmin,
-  coordination: initCoordinationScreen,
-  audit: initAuditScreen,
-  about: initAboutScreen,
-  privacy: initPrivacyScreen,
-  help: initHelpScreen,
-  auth: initAuthScreen,
-  setup: initSetupWizard,
 };
 
-const mobileNavViews = ["emergency", "map", "history", "settings"];
+const mobileNavViews = ["emergency", "map"];
 const viewSetups = {
   emergency: setupEmergencyHomeHandlers,
-  location: setupLocationHandlers,
-  escalation: setupEscalationHandlers,
-  confirm: setupConfirmHandlers,
-  delivery: setupDeliveryHandlers,
-  settings: setupSettingsHandlers,
-  contacts: setupContactsHandlers,
-  coordination: setupCoordinationHandlers,
-  auth: setupAuthHandlers,
-  setup: setupWizardHandlers,
 };
 
 function getCurrentView() {
@@ -142,10 +97,8 @@ function initMobileNav() {
   nav.className = "bottom-nav";
   const current = getCurrentView();
   nav.innerHTML = `
-    <div class="nav-item ${mobileNavViews.includes(current) && current === "report" ? "active" : ""}" data-view="report">[REPORT]<br>Report</div>
+    <div class="nav-item ${mobileNavViews.includes(current) && current === "emergency" ? "active" : ""}" data-view="emergency">[EMERGENCY]<br>Emergency</div>
     <div class="nav-item ${mobileNavViews.includes(current) && current === "map" ? "active" : ""}" data-view="map">[MAP]<br>Map</div>
-    <div class="nav-item ${mobileNavViews.includes(current) && current === "history" ? "active" : ""}" data-view="history">[HISTORY]<br>History</div>
-    <div class="nav-item ${mobileNavViews.includes(current) && current === "settings" ? "active" : ""}" data-view="settings">[SETTINGS]<br>Settings</div>
   `;
   document.body.appendChild(nav);
   nav.addEventListener("click", (e) => {
@@ -181,9 +134,6 @@ function render() {
   }
   if (view === "map") {
     setTimeout(() => setupMap(), 100);
-  }
-  if (view === "coordination") {
-    setTimeout(() => setupMap("dashboard-map", { isDashboard: true }), 120);
   }
   app.addEventListener("click", (e) => {
     const navLink = e.target.closest("[data-nav]");
