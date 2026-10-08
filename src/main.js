@@ -342,8 +342,6 @@ subscribe(() => {
   }
 });
 
-setupGlobalListeners();
-
 installErrorBoundary();
 
 window.addEventListener("hashchange", () => {
