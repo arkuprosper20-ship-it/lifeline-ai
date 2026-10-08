@@ -42,5 +42,7 @@ export function navigateTo(view, params = {}) {
 
 export function getHashRoute() {
   const hash = location.hash.replace(/^#!?/, "").trim() || "emergency";
-  return hash;
+  // Extract only the path part before query string
+  const path = hash.split("?")[0];
+  return path || "emergency";
 }
