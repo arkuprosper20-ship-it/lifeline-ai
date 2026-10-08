@@ -18,6 +18,7 @@ import { initPrivacyScreen } from "./views/privacy.js";
 import { initHelpScreen } from "./views/help.js";
 import { initAuthScreen, setupAuthHandlers } from "./views/auth.js";
 import { initSetupWizard, setupWizardHandlers, checkNeedsSetup } from "./views/setup-wizard.js";
+import { initEmergencyHome, setupEmergencyHomeHandlers } from "./views/emergency-home.js";
 import { startAnalysisFlow } from "./flows/analyze.js";
 import { setupGlobalListeners } from "./handlers.js";
 import { renderComponent, showToast, installErrorBoundary } from "./ui.js";
@@ -29,8 +30,11 @@ import { initLanguage, getLanguage, setLanguage, getAvailableLanguages } from ".
 import { checkAllIncidentsSLA, createSLATimer } from "./sla.js";
 import { generateAfterActionReport, generateBatchReport, generateCsvReport, downloadReport } from "./reports.js";
 import { connectWebSocket, subscribe as subscribeWS, getWebSocketStatus } from "./ws.js";
+import { preCaptureLocation } from "./location.js";
+import { navigateTo, getHashRoute } from "./navigation.js";
 
 const routes = {
+  emergency: initEmergencyHome,
   report: initReportScreen,
   analysis: initAnalysisScreen,
   brief: initIncidentBrief,
@@ -51,8 +55,9 @@ const routes = {
   setup: initSetupWizard,
 };
 
-const mobileNavViews = ["report", "map", "history", "settings"];
+const mobileNavViews = ["emergency", "map", "history", "settings"];
 const viewSetups = {
+  emergency: setupEmergencyHomeHandlers,
   location: setupLocationHandlers,
   escalation: setupEscalationHandlers,
   confirm: setupConfirmHandlers,
@@ -64,14 +69,9 @@ const viewSetups = {
   setup: setupWizardHandlers,
 };
 
-function getHashRoute() {
-  const hash = location.hash.replace(/^#!?/, "").trim() || "report";
-  return hash;
-}
-
 function getCurrentView() {
   const route = getHashRoute();
-  return routes[route] ? route : "report";
+  return routes[route] ? route : "emergency";
 }
 
 function initSidebar() {
@@ -153,23 +153,6 @@ function initMobileNav() {
     if (!item) return;
     navigateTo(item.dataset.view);
   });
-}
-
-function navigateTo(view, params = {}) {
-  if (!routes[view]) view = "report";
-  const app = document.getElementById("app");
-  if (app) {
-    app.classList.add("page-exit");
-    app.classList.add("page-exit-active");
-  }
-  setTimeout(() => {
-    const search = new URLSearchParams(params);
-    history.replaceState(null, "", "#" + view + (search.toString() ? "?" + search.toString() : ""));
-    getState().ui.currentView = view;
-    getState().ui.params = params;
-    store.save();
-    render();
-  }, 150);
 }
 
 function render() {
@@ -515,7 +498,6 @@ function initSLATimers() {
 }
 
 // Pre-capture location in background (non-blocking)
-import { preCaptureLocation } from "./location.js";
 preCaptureLocation().then(result => {
   if (result.captured) {
     console.log("[LIFELINE] Location pre-captured:", result.coords.latitude.toFixed(4), result.coords.longitude.toFixed(4));
