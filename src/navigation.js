@@ -33,6 +33,8 @@ export function navigateTo(view, params = {}) {
   setTimeout(() => {
     const search = new URLSearchParams(params);
     const newHash = "#" + view + (search.toString() ? "?" + search.toString() : "");
+    // Mark that user has navigated (not a fresh load)
+    sessionStorage.setItem("lifeline-navigated", "true");
     // Use location.hash to trigger hashchange event
     location.hash = newHash;
     getState().ui.currentView = view;

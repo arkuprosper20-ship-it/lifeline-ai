@@ -338,16 +338,17 @@ subscribe(() => {
 
   if (s.ui.needsRender) {
     s.ui.needsRender = false;
-// On fresh load (not navigation), clear incident-specific hash to show emergency home
-if (!sessionStorage.getItem("lifeline-navigated")) {
+// On fresh load (no navigation yet), clear incident-specific hash to show emergency home
+// If user has navigated (sessionStorage flag), keep the current hash
+const hasNavigated = sessionStorage.getItem("lifeline-navigated") === "true";
+if (!hasNavigated) {
   const hash = location.hash;
   if (hash.startsWith("#map?incident=")) {
     history.replaceState(null, "", "#emergency");
   }
-  sessionStorage.setItem("lifeline-navigated", "true");
 }
 
-// Clear navigation flag on page unload so next fresh load resets
+// Clear navigation flag on page unload so next load resets
 window.addEventListener("beforeunload", () => {
   sessionStorage.removeItem("lifeline-navigated");
 });
