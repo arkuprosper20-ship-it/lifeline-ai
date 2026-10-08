@@ -526,4 +526,14 @@ window.LIFELINE_REPORTS = {
   getLanguage,
 };
 
+// On fresh load (no navigation yet), clear incident-specific hash to show emergency home
+// If user has navigated (sessionStorage flag), keep the current hash
+const hasNavigated = sessionStorage.getItem("lifeline-navigated") === "true";
+if (!hasNavigated) {
+  const hash = location.hash;
+  if (hash.startsWith("#map?incident=")) {
+    history.replaceState(null, "", "#emergency");
+  }
+}
+
 render();
